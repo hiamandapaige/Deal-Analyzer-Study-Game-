@@ -1,0 +1,1068 @@
+<title>Deal Analyzer Drills</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* A clean, modern monster-battle game: deep navy backdrop, white rounded cards, smooth cartoon art. One fixed visual world. */
+:root {
+  --bg: #1F2340;
+  --bg-2: #2B3058;
+  --card: #FFFFFF;
+  --card-2: #F3F5FA;
+  --ink: #1E2236;
+  --muted: #5D6482;
+  --line: #E1E5EF;
+  --on-bg: #F1F3FB;
+  --on-bg-muted: #B3B9D6;
+  --sky-top: #8FD0F2;
+  --sky-low: #E4F5FC;
+  --grass: #86CF72;
+  --grass-2: #6BBE5E;
+  --plat: #C2E9AC;
+  --plat-edge: #94CF80;
+  --path: #F0DFAE;
+  --red: #E5533F;
+  --red-dark: #B53A28;
+  --yellow: #FFCB45;
+  --yellow-dark: #D49C17;
+  --blue: #3E6FD8;
+  --green: #2E9E5B;
+  --hp-hi: #3CC46A;
+  --hp-mid: #F2C230;
+  --hp-low: #E0483B;
+  --good-soft: #E1F5E8;
+  --bad-soft: #FDE6E1;
+  --hint: #FFF6D6;
+  --code-bg: #1E2236;
+  --code-fg: #E9ECF5;
+  --font-display: "Fredoka", "Nunito", "Trebuchet MS", Arial, sans-serif;
+  --font-body: "Nunito", "Trebuchet MS", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, Consolas, monospace;
+  --shadow: 0 8px 22px rgba(8, 12, 36, 0.32);
+  --shadow-sm: 0 3px 10px rgba(8, 12, 36, 0.18);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(120% 70% at 50% 0%, #2D3363 0%, var(--bg) 65%) var(--bg);
+  color: var(--on-bg);
+  font-family: var(--font-body); font-size: 18px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 44px;
+  min-height: 100vh;
+}
+.app { max-width: 560px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3, p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+.art { display: block; line-height: 0; }
+.art svg { width: 100%; height: auto; display: block; overflow: visible; }
+.kicker { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-size: 0.85em; }
+
+.card { background: var(--card); color: var(--ink); border-radius: 18px; box-shadow: var(--shadow); padding: 18px; }
+
+/* Trainer card */
+.trainer { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; }
+.avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(var(--sky-low), #CBEAF7); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
+.avatar .art { width: 58px; }
+.who { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.who .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.who .name { font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.2; }
+.chip { display: inline-flex; align-items: center; gap: 4px; background: var(--card-2); color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 14px; font-weight: 700; }
+.bar { height: 10px; border-radius: 999px; background: #E3E7F1; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 999px; background: var(--blue); transition: width 0.5s ease; }
+.small { font-size: 14px; color: var(--muted); font-weight: 600; }
+.badges { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
+.badge { width: 30px; height: 30px; }
+
+/* Tabs: segmented control */
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--bg-2); border-radius: 14px; padding: 4px; }
+.tab { border: 0; background: transparent; color: var(--on-bg-muted); border-radius: 11px; min-height: 44px; font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+.tab[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+/* Buttons */
+.btn { --edge: rgba(0, 0, 0, 0.25); border: 0; border-radius: 14px; padding: 12px 18px; min-height: 54px; font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.2; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 0 var(--edge); transition: transform 0.08s ease, box-shadow 0.08s ease; }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
+.btn-go { background: var(--red); color: #FFFFFF; --edge: var(--red-dark); }
+.btn-yellow { background: var(--yellow); color: var(--ink); --edge: var(--yellow-dark); }
+.btn-alt { background: var(--card); color: var(--ink); --edge: #C3C9DA; }
+.btn-block { width: 100%; }
+.btn-stack { flex-direction: column; gap: 2px; padding-block: 12px; }
+.btn-sub { font-family: var(--font-body); font-weight: 600; font-size: 15px; opacity: 0.95; }
+
+/* Map */
+.route { background: linear-gradient(160deg, var(--grass), var(--grass-2)); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+.route-head { background: var(--card); color: var(--ink); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow-sm); }
+.route-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.2; }
+.prize { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--muted); }
+.prize .badge { width: 20px; height: 20px; }
+.stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.stop { position: relative; display: grid; grid-template-columns: 58px 1fr 34px; gap: 12px; align-items: center; padding: 6px 0; }
+.stop::before { content: ""; position: absolute; left: 25px; top: 0; bottom: 0; width: 8px; border-radius: 4px; background: var(--path); opacity: 0.9; z-index: 0; }
+.stop:first-child::before { top: 50%; }
+.stop:last-child::before { bottom: 50%; }
+.stop:only-child::before { display: none; }
+.tile { position: relative; z-index: 1; width: 58px; height: 58px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; }
+.tile .art { width: 44px; }
+.stop.is-next .tile { box-shadow: 0 0 0 4px var(--yellow), var(--shadow-sm); }
+.stop-btn { text-align: left; background: var(--card); color: var(--ink); border: 0; border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 58px; justify-content: center; box-shadow: var(--shadow-sm); }
+.stop-btn .t { font-weight: 800; font-size: 17px; line-height: 1.3; }
+.stop-btn .m { font-size: 14px; font-weight: 600; color: var(--muted); }
+.stop.is-done .stop-btn .m { color: var(--green); }
+.stop.is-next .stop-btn .m { color: var(--red); }
+.here .art { width: 34px; }
+@media (prefers-reduced-motion: no-preference) {
+  .stop.is-next .here .art { animation: bob 1.2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-4px); } }
+}
+
+/* Battle scene */
+.scene { position: relative; width: 100%; aspect-ratio: 16 / 11; border-radius: 20px; overflow: hidden; background: linear-gradient(var(--sky-top), var(--sky-low) 56%, var(--grass) 56%, var(--grass-2) 100%); box-shadow: var(--shadow); }
+.cloud { position: absolute; background: #FFFFFF; border-radius: 999px; opacity: 0.8; }
+.cloud.c1 { width: 18%; height: 7%; left: 50%; top: 8%; }
+.cloud.c2 { width: 12%; height: 5%; left: 8%; top: 36%; opacity: 0.6; }
+.plat { position: absolute; border-radius: 50%; background: radial-gradient(var(--plat) 55%, var(--plat-edge)); }
+.plat.foe { right: 6%; top: 41%; width: 40%; height: 12%; }
+.plat.me { left: 3%; bottom: 5%; width: 46%; height: 14%; }
+.spr { position: absolute; }
+.spr.foe { right: 12%; top: 9%; width: 28%; }
+.spr.me { left: 11%; bottom: 9%; width: 28%; }
+.hud { position: absolute; background: rgba(255, 255, 255, 0.96); color: var(--ink); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; width: 46%; box-shadow: var(--shadow-sm); }
+.hud.foe { left: 4%; top: 6%; }
+.hud.me { right: 4%; bottom: 7%; }
+.hud .nm { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.hud .who-n { font-family: var(--font-display); font-weight: 600; font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+.hud .lv { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.hp { display: flex; align-items: center; gap: 6px; }
+.hp b { font-size: 11px; font-weight: 800; color: #FFFFFF; background: var(--ink); padding: 1px 5px; border-radius: 4px; }
+.hp .bar { flex: 1; height: 8px; }
+.hp .bar i { transition: width 0.6s ease, background 0.6s ease; }
+.hp-n { font-size: 13px; font-weight: 700; text-align: right; color: var(--muted); }
+.defeated .art { opacity: 0.25; filter: grayscale(1); transition: opacity 0.6s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .shake { animation: shake 0.4s ease; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+  .flash .art { animation: flash 0.5s ease 2; }
+  @keyframes flash { 50% { opacity: 0.2; } }
+  .enter { animation: enter 0.5s cubic-bezier(.2,.8,.3,1.2); }
+  @keyframes enter { from { transform: translateX(50%) scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  .idle .art { animation: breathe 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes breathe { 50% { transform: scale(1.03, 0.97); } }
+}
+
+/* Dialog */
+.dialog { background: var(--card); color: var(--ink); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+.dialog h2 { font-weight: 800; font-size: 21px; line-height: 1.3; }
+.dialog p { font-size: 18px; line-height: 1.55; }
+.announce { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--red); }
+.code { background: var(--code-bg); color: var(--code-fg); font-family: var(--font-mono); font-size: 13.5px; line-height: 1.6; border-radius: 10px; padding: 12px 14px; margin: 0; overflow-x: auto; white-space: pre; }
+.hintbox { background: var(--hint); border-left: 4px solid var(--yellow-dark); border-radius: 10px; padding: 10px 12px; font-size: 16px; line-height: 1.5; }
+.hintbox .kicker { color: #8A6A10; display: block; margin-bottom: 2px; }
+.result { border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.result p { font-size: 17px; }
+.result-good { background: var(--good-soft); }
+.result-bad { background: var(--bad-soft); }
+.result .verdict { font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+.result-good .verdict { color: var(--green); }
+.result-bad .verdict { color: var(--red); }
+
+/* Professor */
+.prof { display: flex; gap: 12px; align-items: flex-end; }
+.portrait { width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(var(--sky-low), #CBEAF7); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; box-shadow: var(--shadow-sm); flex: none; }
+.portrait .art { width: 74px; }
+.speaker { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; }
+.speaker .n { font-family: var(--font-display); font-weight: 600; font-size: 19px; color: var(--on-bg); }
+.speaker .s { font-size: 14px; color: var(--on-bg-muted); font-weight: 600; }
+
+/* Answer moves */
+.moves { display: flex; flex-direction: column; gap: 8px; }
+.move { text-align: left; background: var(--card); color: var(--ink); border: 2px solid transparent; border-radius: 14px; padding: 10px 12px; min-height: 56px; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: center; box-shadow: var(--shadow-sm); font-size: 17px; line-height: 1.4; font-weight: 600; transition: transform 0.08s ease; }
+.move:hover:not(:disabled) { border-color: var(--blue); }
+.move:active:not(:disabled) { transform: scale(0.99); }
+.move .key { width: 32px; height: 32px; border-radius: 50%; background: var(--card-2); color: var(--muted); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.move .txt { min-width: 0; overflow-wrap: anywhere; }
+.move:disabled { cursor: default; }
+.move.ok { background: var(--good-soft); border-color: var(--green); }
+.move.ok .key { background: var(--green); color: #FFFFFF; }
+.move.no { background: var(--bad-soft); border-color: var(--red); }
+.move.no .key { background: var(--red); color: #FFFFFF; }
+.move.dim { background: #E9ECF4; color: #4A5068; box-shadow: none; }
+.move .tag { display: block; font-size: 13px; font-weight: 800; margin-top: 2px; }
+.move.ok .tag { color: var(--green); }
+.move.no .tag { color: var(--red); }
+
+/* Top bar */
+.topbar { display: flex; align-items: center; gap: 12px; }
+.icon-btn { width: 44px; height: 44px; flex: none; border: 0; background: var(--bg-2); color: var(--on-bg); border-radius: 12px; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.topbar .bar { flex: 1; height: 12px; background: var(--bg-2); }
+.topbar .bar i { background: var(--yellow); }
+.count { font-size: 15px; font-weight: 700; color: var(--on-bg-muted); white-space: nowrap; }
+
+/* Bug log */
+.log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.entry { background: var(--card); color: var(--ink); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; box-shadow: var(--shadow-sm); }
+.entry .pic { background: linear-gradient(var(--sky-low), #D6F0DE); border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 10px; }
+.entry .pic .art { width: 76px; }
+.entry .top { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+.entry .nm { font-family: var(--font-display); font-weight: 600; font-size: 18px; overflow-wrap: anywhere; }
+.entry p { font-size: 15px; line-height: 1.45; }
+.type { color: #FFFFFF; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; }
+
+/* Training */
+.train-row { background: var(--card); color: var(--ink); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow-sm); }
+.train-row .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.train-row .t { font-family: var(--font-display); font-weight: 600; font-size: 19px; }
+.train-row .bar i { background: var(--green); }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.duo .btn { min-height: 46px; font-size: 17px; padding: 8px 10px; }
+.section-title { font-family: var(--font-display); font-weight: 600; font-size: 19px; color: var(--on-bg); padding-top: 6px; }
+.note { color: var(--on-bg-muted); font-size: 15px; font-weight: 600; }
+
+/* Study cards */
+.study { min-height: 260px; width: 100%; text-align: left; border: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.study .term { font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.25; overflow-wrap: anywhere; }
+.study .def { font-size: 19px; line-height: 1.55; }
+.study.back { background: #EAF1FF; }
+
+/* Results */
+.learned { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.learned li { padding-left: 28px; position: relative; font-size: 17px; }
+.learned li::before { content: "✓"; position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%; background: var(--good-soft); color: var(--green); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.banner { background: var(--yellow); color: var(--ink); border-radius: 16px; padding: 12px 14px; text-align: center; box-shadow: var(--shadow-sm); }
+.banner .t { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.catch { display: grid; grid-template-columns: 100px 1fr; gap: 14px; align-items: center; }
+.catch .pic { background: linear-gradient(var(--sky-low), #D6F0DE); border-radius: 14px; padding: 10px; display: flex; justify-content: center; }
+.catch .pic .art { width: 78px; }
+.catch h2 { font-family: var(--font-display); font-weight: 600; font-size: 23px; line-height: 1.2; margin: 4px 0; }
+.missed { display: flex; flex-direction: column; gap: 10px; }
+.missed .card { box-shadow: var(--shadow-sm); padding: 14px; }
+.missed .card p + p { margin-top: 4px; }
+.ans { color: var(--green); font-weight: 800; }
+.confirm { background: var(--bad-soft); color: var(--ink); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.linkish { background: none; border: 0; color: var(--on-bg-muted); text-decoration: underline; font-size: 15px; padding: 6px 0; align-self: flex-start; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 380px) {
+  .log-grid { grid-template-columns: 1fr; }
+  .hud { width: 50%; padding: 6px 9px; }
+  .hud .who-n { font-size: 14px; }
+}
+</style>
+
+<main class="app" id="app"></main>
+<div class="sr-only" aria-live="polite" id="live"></div>
+
+<script>
+const TOPICS = [
+  { id: "setup", name: "Setup and Git", blurb: "Terminal, virtual environment, Git, folders" },
+  { id: "python", name: "Python basics", blurb: "Classes, types, imports, errors" },
+  { id: "db", name: "Databases and SQL", blurb: "SQLite, tables, saving safely" },
+  { id: "pipe", name: "The data pipeline", blurb: "pandas, Redfin data, ETL" },
+];
+
+// Each question: the first option is the correct one; options are shuffled when shown.
+const QS = [
+  // Setup and Git
+  { id: "s1", t: "setup", q: `Where do you type this command?`, code: `python3 hello.py`, a: [`In the terminal`, `Inside hello.py`, `In .gitignore`, `In README.md`], why: `The file holds instructions; the terminal runs them. Typed into the file, Python tries to run it as code and you get errors.` },
+  { id: "s2", t: "setup", q: `What does this line do?`, code: `print("Hello, real estate!")`, a: [`Shows the text in the terminal`, `Saves the text to a file`, `Sends it to a printer`, `Creates a variable named Hello`], why: `print is a built-in function whose one job is showing text. The text in quotes is a string.` },
+  { id: "s3", t: "setup", q: `What is a virtual environment (.venv) for?`, a: [`Keeping this project’s packages separate from the rest of your computer`, `Making Python run faster`, `Backing up your code online`, `Hiding files from Git`], why: `It’s a private toolbox. Packages like pandas install inside it, so two projects that need different versions can’t break each other.` },
+  { id: "s4", t: "setup", q: `How can you tell your virtual environment is turned on?`, a: [`The terminal line starts with (.venv)`, `VS Code turns green`, `File names turn blue`, `git status says so`], why: `When it’s active, your prompt begins with (.venv). Check for it before running pip install.` },
+  { id: "s5", t: "setup", q: `You open a new terminal and (.venv) is missing. What do you run?`, a: [`source .venv/bin/activate`, `python3 -m venv .venv`, `git init`, `pip install venv`], why: `Creating the box (python3 -m venv .venv) happens once. Turning it on with source happens in every new terminal.` },
+  { id: "s6", t: "setup", q: `What does this command do?`, code: `git commit -m "Add Property data model"`, a: [`Saves a snapshot of the staged files with that message`, `Uploads your code to GitHub`, `Creates a file with that name`, `Deletes old versions`], why: `commit takes the snapshot; -m adds the message describing what changed. Uploading is a separate step: git push.` },
+  { id: "s7", t: "setup", q: `What’s the difference between commit and push?`, a: [`Commit saves a snapshot on your computer; push uploads snapshots to GitHub`, `They do the same thing`, `Push saves locally; commit uploads`, `Commit is for code; push is for data`], why: `Commit is your local save point. Push sends your save points to GitHub, your online backup and portfolio.` },
+  { id: "s8", t: "setup", q: `Why is .env listed in .gitignore?`, a: [`It will hold secret API keys that must never go online`, `It’s too large for Git`, `Git can’t read it`, `Python creates it automatically`], why: `Secrets never get committed, especially in a public repository. .gitignore stops them from being added by accident.` },
+  { id: "s9", t: "setup", q: `Why is the data/ folder kept out of Git?`, a: [`Listing files are large, change often, and aren’t yours to republish`, `Git can’t store CSV files`, `It slows down Python`, `VS Code requires it`], why: `Git is for your code. Downloaded data stays on your computer.` },
+  { id: "s10", t: "setup", q: `What does the empty file app/__init__.py do?`, a: [`Labels app/ as a package so files can import from each other`, `Starts the app`, `Stores your settings`, `Nothing; it’s safe to delete`], why: `Its existence is its whole job. It’s what lets you write from app.models import Property.` },
+  { id: "s11", t: "setup", q: `Which command shows what’s new, changed, or ready to commit?`, a: [`git status`, `git log`, `git init`, `git push`], why: `Run git status before every commit so nothing sneaks in by accident.` },
+  { id: "s12", t: "setup", q: `In this command, what does app/ mean?`, code: `git add app/`, a: [`Stage everything in the app folder for the next snapshot`, `Create a folder named app`, `Delete the app folder`, `Push the app folder to GitHub`], why: `git add chooses what goes into the next commit. You can name files or whole folders.` },
+
+  // Python basics
+  { id: "p1", t: "python", q: `In the paper-form picture, what is a class?`, a: [`The blank form’s design`, `One filled-out form`, `One box on the form`, `What’s written in a box`], why: `A class is a blueprint. Property is your class: it says what boxes every property has.` },
+  { id: "p2", t: "python", q: `In this line, what is home?`, code: `home = Property(address="123 Oak St", ...)`, a: [`An object: one filled-out form`, `A class`, `A field`, `A database table`], why: `Calling the class fills out one copy of the form. That copy is an object, stored in the variable home.` },
+  { id: "p3", t: "python", q: `What does home.price give you?`, a: [`The price stored in that one property`, `The class definition`, `A list of all prices`, `An error`], why: `The dot means “look inside home and get its price field.”` },
+  { id: "p4", t: "python", q: `Why is zip_code stored as text (str) instead of a number?`, a: [`Numbers drop leading zeros, and you never do math on ZIP codes`, `Text uses less memory`, `int can’t hold five digits`, `SQLite requires it`], why: `02134 would become 2134. Rule: if it looks like a number but you’d never do math on it, store it as text.` },
+  { id: "p5", t: "python", q: `Why is baths a float but beds an int?`, a: [`Half baths exist, like 2.5; bedrooms are always whole`, `Floats are faster`, `Bedrooms can be negative`, `No real reason`], why: `Pick each type by thinking about every value the field could realistically hold.` },
+  { id: "p6", t: "python", q: `What does this field mean?`, code: `sqft: int | None = None`, a: [`A whole number or blank, and it starts blank`, `It must always be filled in`, `It defaults to zero`, `It holds text`], why: `The | reads as “or.” The = None makes it a fill-if-you-know box.` },
+  { id: "p7", t: "python", q: `What happens if you leave out price when creating a Property?`, a: [`Python raises a TypeError`, `price becomes 0`, `price becomes None`, `It saves without a price`], why: `price has no default, so it’s must-fill. Python stops you at the door: missing 1 required positional argument: 'price'.` },
+  { id: "p8", t: "python", q: `Why store an unknown size as None instead of 0?`, a: [`Zeros would wrongly drag down averages and price-per-square-foot math`, `None takes less space`, `0 isn’t allowed`, `There’s no difference`], why: `None means unknown. Your code can skip unknowns instead of treating them as real numbers.` },
+  { id: "p9", t: "python", q: `What does this error most likely mean?`, code: `NameError: name 'date' is not defined`, a: [`This file uses date without importing it, or there’s a typo`, `The date format is wrong`, `The database is missing`, `date is a reserved word`], why: `A NameError means Python saw a name it doesn’t recognize in this file. Usually a missing import or a typo.` },
+  { id: "p10", t: "python", q: `try_models.py imports Property from app.models. Does it also get date automatically?`, a: [`No. Each file must import what it uses`, `Yes, imports carry over`, `Only if it’s in the same folder`, `Only for built-in tools`], why: `from app.models import Property brings over Property and nothing else. Each file has its own toolbox.` },
+  { id: "p11", t: "python", q: `What does @dataclass do?`, a: [`Writes the setup and printing code, so you only list the fields`, `Connects the class to the database`, `Makes the class run faster`, `Turns the class into a function`], why: `It’s a decorator: a tag that upgrades the code below it. Without it you’d write an __init__ for every field.` },
+  { id: "p12", t: "python", q: `In a dataclass, which fields must come first?`, a: [`Required fields, then optional ones with defaults`, `Optional fields first`, `Alphabetical order`, `Order doesn’t matter`], why: `Python refuses a field without a default after one with a default.` },
+  { id: "p13", t: "python", q: `Where should you look first when reading an error?`, a: [`The last line`, `The first line`, `The middle`, `Only the file name`], why: `The last line names the kind of error and what went wrong. The lines above show which file and line.` },
+  { id: "p14", t: "python", q: `What does def do?`, a: [`Defines a function: a named, reusable job`, `Deletes a variable`, `Defines a database`, `Sets a default value`], why: `get_connection, init_db and to_int are all functions. If you can name the job in a few words, it’s a function.` },
+  { id: "p15", t: "python", q: `What does properties[0] give you?`, a: [`The first item in the list`, `The last item`, `An empty list`, `The number zero`], why: `Lists start counting at 0. len(properties) tells you how many items there are.` },
+
+  // Databases and SQL
+  { id: "d1", t: "db", q: `Why does your test house disappear when the script ends?`, a: [`Variables live in memory, which is wiped when the script ends`, `Python deletes old objects`, `The database removes it`, `VS Code clears it`], why: `Memory is a whiteboard. A database is a notebook that keeps what you write.` },
+  { id: "d2", t: "db", q: `What is SQLite?`, a: [`A database stored in a single file, built into Python`, `A website for storing code`, `A paid cloud service`, `A spreadsheet app`], why: `Nothing to install, free, and private to your computer. Your file is data/properties.db.` },
+  { id: "d3", t: "db", q: `Which SQL type matches Python’s float?`, a: [`REAL`, `TEXT`, `INTEGER`, `DECIMAL`], why: `str is TEXT, int is INTEGER, float is REAL.` },
+  { id: "d4", t: "db", q: `How are dates stored in SQLite?`, a: [`As text, like 2026-11-04`, `With a DATE type`, `As whole numbers only`, `They can’t be stored`], why: `SQLite has no date type, so the importer converts dates with isoformat().` },
+  { id: "d5", t: "db", q: `What does NOT NULL do on a column?`, a: [`Makes the column required`, `Allows blanks`, `Deletes empty rows`, `Sets the value to zero`], why: `NOT NULL is the database’s version of a must-fill box.` },
+  { id: "d6", t: "db", q: `What does this rule prevent?`, code: `UNIQUE (address, zip_code)`, a: [`Saving the same address and ZIP twice`, `Two houses in the same ZIP`, `Blank addresses`, `Lowercase addresses`], why: `It’s your duplicate protection, and it’s why re-importing a file saves 0 new rows.` },
+  { id: "d7", t: "db", q: `What happens if you forget conn.commit()?`, a: [`Your changes are thrown away`, `The database is deleted`, `Python crashes`, `Nothing; it saves anyway`], why: `commit saves the change. Without it, the work disappears when the connection closes.` },
+  { id: "d8", t: "db", q: `What does this line at the bottom of db.py do?`, code: `if __name__ == "__main__":`, a: [`Runs the code below only when you run this file directly`, `Runs only on the main Git branch`, `Makes the function public`, `Renames the file to main`], why: `When another file imports from db.py, that block is skipped. It keeps “run me” code apart from “borrow me” code.` },
+  { id: "d9", t: "db", q: `Why does the table command say IF NOT EXISTS?`, a: [`So running it twice doesn’t cause an error`, `To delete an old table first`, `To create two tables`, `To make it faster`], why: `If the table is already there, it’s skipped. That also means it won’t add new columns to an existing table.` },
+  { id: "d10", t: "db", q: `At the sqlite> prompt, your SELECT shows ...> and waits. Why?`, a: [`You forgot the semicolon`, `The table is empty`, `You need .quit`, `The database is locked`], why: `SQL commands end with a semicolon. Type ; and press Enter. Dot-commands like .tables don’t need one.` },
+  { id: "d11", t: "db", q: `What is id INTEGER PRIMARY KEY?`, a: [`A unique number the database gives each row automatically`, `The MLS number`, `The ZIP code`, `A password`], why: `Like a receipt number: 1, 2, 3… Later tables can point to a property by its id.` },
+  { id: "d12", t: "db", q: `Why use placeholders like :address instead of pasting values into SQL?`, a: [`They fill values in safely, handle apostrophes, and block SQL injection`, `They’re faster to type`, `SQLite requires colons`, `They shrink the database`], why: `An address like O’Brien Ln would break hand-built SQL. Always use placeholders for values.` },
+  { id: "d13", t: "db", q: `With INSERT OR IGNORE, what happens to a house that’s already saved?`, a: [`It’s skipped quietly`, `It’s overwritten`, `The program crashes`, `A second copy is saved`], why: `It breaks the UNIQUE rule, so it’s ignored. cursor.rowcount is 0 for that row.` },
+  { id: "d14", t: "db", q: `What does this query show?`, code: `SELECT property_type, COUNT(*)\nFROM properties\nGROUP BY property_type;`, a: [`How many properties there are of each type`, `Every property’s details`, `The most expensive property`, `The table’s design`], why: `GROUP BY sorts rows into piles; COUNT(*) counts each pile. For ZIP 39157: 70 single-family, 16 land, and so on.` },
+
+  // The data pipeline
+  { id: "e1", t: "pipe", q: `What does ETL stand for?`, a: [`Extract, Transform, Load`, `Enter, Test, Launch`, `Export, Translate, List`, `Edit, Train, Log`], why: `Read the file, reshape it into Property objects, save them to the database. Most data jobs follow this pattern.` },
+  { id: "e2", t: "pipe", q: `Which package reads the Redfin CSV into a table?`, a: [`pandas`, `sqlite3`, `pathlib`, `dataclasses`], why: `pd.read_csv reads the file into a DataFrame.` },
+  { id: "e3", t: "pipe", q: `What is a DataFrame?`, a: [`A table in memory with rows and named columns`, `A picture frame for charts`, `A database file`, `A type of chart`], why: `Think of it as a spreadsheet you control with code. By convention it’s stored as df.` },
+  { id: "e4", t: "pipe", q: `Why never hand-edit the raw Redfin file?`, a: [`Next week’s download has the same quirks; fix them once in code`, `It voids Redfin’s terms`, `Python can’t read edited files`, `Editing deletes the header`], why: `Fixes in code work on every future file. Fixes by hand have to be repeated forever.` },
+  { id: "e5", t: "pipe", q: `ZIP codes came in as 39157.0. What fixes it?`, a: [`dtype={"ZIP OR POSTAL CODE": str}`, `int(zip_code)`, `df.round()`, `Edit the CSV by hand`], why: `It tells pandas not to guess the type and to read that column as text.` },
+  { id: "e6", t: "pipe", q: `The first row in the file had no address. What was it?`, a: [`Redfin’s note that some MLS listings aren’t included`, `A house missing its address`, `A duplicate listing`, `The header row`], why: `Almost every column had exactly 1 blank: a clue. dropna(subset=["ADDRESS"]) removes it.` },
+  { id: "e7", t: "pipe", q: `Why did beds show as 3.0 instead of 3?`, a: [`pandas turns a column decimal if it has any blank`, `Redfin stores half bedrooms`, `The file was corrupted`, `CSV files can’t hold whole numbers`], why: `Whole-number columns can’t hold NaN. The to_int helper converts each value back.` },
+  { id: "e8", t: "pipe", q: `Redfin has a column named SOURCE. Why isn’t it mapped to your source field?`, a: [`It means the MLS name, not which importer brought the data in`, `It’s always blank`, `It’s a secret`, `It’s too long`], why: `Same word, different meaning. Your source is always "redfin" for this importer.` },
+  { id: "e9", t: "pipe", q: `What does to_int() return for a blank value?`, a: [`None`, `0`, `An error`, `An empty string`], why: `Blank becomes None, your form’s word for unknown. Otherwise 3.0 becomes 3.` },
+  { id: "e10", t: "pipe", q: `What does DRY stand for?`, a: [`Don’t repeat yourself`, `Do run yesterday`, `Data ready yet`, `Define, run, yield`], why: `Write the blank check once in a helper and reuse it for every field.` },
+  { id: "e11", t: "pipe", q: `In this loop, what does the _ mean?`, code: `for _, row in df.iterrows():`, a: [`“I don’t need the row number”`, `Skip this row`, `A private variable`, `The last row`], why: `iterrows hands over each row’s number and contents. The underscore is a placeholder for the part you ignore.` },
+  { id: "e12", t: "pipe", q: `Why does the importer move a file to data/raw only after saving it?`, a: [`So a crash leaves it in the inbox to retry`, `To save disk space`, `Git requires it`, `To sort files by date`], why: `Thinking about what happens when things fail is part of writing reliable code.` },
+  { id: "e13", t: "pipe", q: `You import the same 103-listing file a second time. How many new rows are saved?`, a: [`0`, `103`, `206`, `It crashes`], why: `UNIQUE plus INSERT OR IGNORE skips every house that’s already there.` },
+  { id: "e14", t: "pipe", q: `Of the 103 listings in ZIP 39157, how many were MLS houses, condos, and townhouses?`, a: [`76`, `103`, `16`, `5`], why: `The rest: 16 vacant land, 6 for sale by owner, 5 builder floor plans, and 1 out of area.` },
+  { id: "e15", t: "pipe", q: `Why does the importer load all 103 listings, even vacant land?`, a: [`Choosing comps is the cleaning step’s job; don’t throw data away early`, `Land is worth more`, `pandas can’t filter`, `Redfin requires it`], why: `Keeping import and cleaning separate means you never lose data by accident. Cleaning is Project 3.` },
+  { id: "e16", t: "pipe", q: `What does pip install pandas do?`, a: [`Downloads pandas into your active virtual environment`, `Creates a file named pandas`, `Uploads pandas to GitHub`, `Imports pandas into your script`], why: `pip is Python’s package installer. Then record it in requirements.txt, your project’s shopping list.` },
+
+  // Fill-in-the-blank and applied checks, used in lessons and practice
+  { id: "n1", t: "setup", q: `Fill in the blank to turn on the virtual environment:`, code: `______ .venv/bin/activate`, a: [`source`, `python3`, `git`, `pip`], why: `source runs the activate script in your current terminal, which turns the box on. Your prompt then starts with (.venv).` },
+  { id: "n2", t: "python", q: `Fill in the blank so this prints the property’s price:`, code: `print(home.______)`, a: [`price`, `Property`, `"price"`, `home`], why: `object.field reads one box from one filled-out form. No quotes: price is a field name, not text.` },
+  { id: "n3", t: "python", q: `Which line correctly makes year_built optional?`, a: [`year_built: int | None = None`, `year_built: int`, `year_built = int`, `optional year_built: int`], why: `| None says the box may be blank, and = None makes it start blank.` },
+  { id: "n4", t: "db", q: `Fill in the blank so the new table is actually saved:`, code: `conn.execute(CREATE_PROPERTIES_TABLE)\nconn.______()\nconn.close()`, a: [`commit`, `save`, `push`, `write`], why: `commit saves the change to the database file. push is a Git word, not a database one.` },
+  { id: "n5", t: "pipe", q: `Fill in the blank to drop the note row:`, code: `df = df.______(subset=["ADDRESS"])`, a: [`dropna`, `dropnote`, `remove`, `filter`], why: `dropna drops rows with blanks (na). subset limits the check to the ADDRESS column.` },
+  { id: "n6", t: "pipe", q: `After dropping the note row, what does this print for the 39157 file?`, code: `print(df.shape)`, a: [`(103, 27)`, `(27, 103)`, `103`, `(104, 27)`], why: `shape is (rows, columns): 103 listings, 27 Redfin columns. Before dropping the note row, it was 104.` },
+  { id: "n7", t: "setup", q: `You run python3 hello.py and get “No such file or directory.” What’s the most likely cause?`, a: [`The terminal is in a different folder than the file`, `Python isn’t installed`, `The file is empty`, `You need to run git init`], why: `The prompt shows which folder the terminal is in. The file has to be there, or you give its path.` },
+  { id: "n9", t: "db", q: `Which column definition makes price required?`, a: [`price INTEGER NOT NULL`, `price INTEGER`, `price REQUIRED`, `NOT price INTEGER`], why: `NOT NULL comes after the type and means the column can never be blank.` },
+  { id: "n10", t: "pipe", q: `Fill in the blank to add each Property to the end of the list:`, code: `properties = []\nfor _, row in df.iterrows():\n    properties.______(row_to_property(row, today))`, a: [`append`, `add`, `push`, `insert_end`], why: `list.append adds one item to the end of a list.` },
+  { id: "n11", t: "python", q: `Which type should a phone number be?`, a: [`str`, `int`, `float`, `date`], why: `Same rule as ZIP codes: it looks like a number, but you never do math on it, and leading zeros or dashes would break as a number.` },
+];
+
+const CARDS = [
+  { id: "c1", t: "setup", f: `File vs. terminal`, b: `The file holds instructions. The terminal is where you run them: python3 hello.py.` },
+  { id: "c2", t: "setup", f: `Virtual environment (.venv)`, b: `A private toolbox of packages for one project. Turn it on with source .venv/bin/activate.` },
+  { id: "c3", t: "setup", f: `git add → commit → push`, b: `add picks files for the next snapshot. commit saves it on your computer. push uploads it to GitHub.` },
+  { id: "c4", t: "setup", f: `.gitignore`, b: `Files Git must never save: secrets (.env), the .venv, data, and databases.` },
+  { id: "c5", t: "setup", f: `__init__.py`, b: `An empty file that labels a folder as a package, so files can import from each other.` },
+  { id: "c6", t: "setup", f: `git status`, b: `Shows what’s new, changed, and staged. Run it before every commit.` },
+  { id: "c7", t: "python", f: `Class`, b: `A blueprint: the blank form. Property is your class.` },
+  { id: "c8", t: "python", f: `Object`, b: `One filled-out form: one house, like home = Property(...).` },
+  { id: "c9", t: "python", f: `Field`, b: `One box on the form, like price or zip_code. Read one with home.price.` },
+  { id: "c10", t: "python", f: `str, int, float`, b: `Text, whole numbers, decimals. ZIP codes are str; prices are int; baths are float.` },
+  { id: "c11", t: "python", f: `None`, b: `Blank or unknown. Not zero.` },
+  { id: "c12", t: "python", f: `= None on a field`, b: `Makes it optional: blank unless you fill it in. No default means must-fill.` },
+  { id: "c13", t: "python", f: `@dataclass`, b: `A decorator that writes the setup and printing code, so you only list fields.` },
+  { id: "c14", t: "python", f: `Import`, b: `Borrow code from another file. Each file needs its own imports.` },
+  { id: "c15", t: "python", f: `Function (def)`, b: `A named, reusable job. If you can name it in a few words, it’s a function.` },
+  { id: "c16", t: "python", f: `TypeError vs. NameError`, b: `TypeError: a missing or wrong argument, like leaving out price. NameError: Python doesn’t know that name, usually a missing import or typo.` },
+  { id: "c17", t: "python", f: `Why is a ZIP code text?`, b: `Numbers drop leading zeros (02134 becomes 2134), and you never do math on ZIP codes.` },
+  { id: "c18", t: "db", f: `Memory vs. database`, b: `Memory is a whiteboard wiped when the script ends. A database is a notebook saved to disk.` },
+  { id: "c19", t: "db", f: `SQLite`, b: `A database that lives in one file and comes with Python. Yours is data/properties.db.` },
+  { id: "c20", t: "db", f: `NOT NULL`, b: `SQL for a required column: the database’s must-fill box.` },
+  { id: "c21", t: "db", f: `UNIQUE (address, zip_code)`, b: `Stops the same house from being saved twice.` },
+  { id: "c22", t: "db", f: `conn.commit()`, b: `Saves changes to the database. Forget it and the work is lost.` },
+  { id: "c23", t: "db", f: `if __name__ == "__main__":`, b: `Runs the code below only when you run this file directly, not when it’s imported.` },
+  { id: "c24", t: "db", f: `Placeholder (:address)`, b: `A safe blank SQLite fills in. Handles apostrophes and blocks SQL injection.` },
+  { id: "c25", t: "db", f: `INSERT OR IGNORE`, b: `Add the row, or skip it quietly if it breaks the UNIQUE rule.` },
+  { id: "c26", t: "db", f: `GROUP BY`, b: `Sorts rows into piles so you can count each one, like listings per property type.` },
+  { id: "c27", t: "pipe", f: `ETL`, b: `Extract: read the file. Transform: reshape rows into Properties. Load: save to the database.` },
+  { id: "c28", t: "pipe", f: `pandas and DataFrame`, b: `pandas reads files into a DataFrame: a table with rows and named columns.` },
+  { id: "c29", t: "pipe", f: `NaN`, b: `pandas’ blank, short for Not a Number. The importer turns it into None.` },
+  { id: "c30", t: "pipe", f: `dtype={"ZIP OR POSTAL CODE": str}`, b: `Tells pandas to read that column as text instead of guessing. Fixes 39157.0.` },
+  { id: "c31", t: "pipe", f: `dropna(subset=["ADDRESS"])`, b: `Drops rows with no address, like Redfin’s note row.` },
+  { id: "c32", t: "pipe", f: `DRY`, b: `Don’t repeat yourself: write logic once, like to_int, and reuse it.` },
+  { id: "c33", t: "pipe", f: `for loop and list`, b: `for row in ... repeats steps for each item. properties.append(...) adds to the end of a list.` },
+  { id: "c34", t: "pipe", f: `requirements.txt`, b: `Your project’s shopping list of packages. pip install -r requirements.txt installs them all.` },
+  { id: "c35", t: "pipe", f: `data/inbox → data/raw`, b: `New files land in the inbox. After saving, the importer moves them to raw.` },
+  { id: "c36", t: "pipe", f: `Never hand-edit raw data`, b: `Fix quirks once in code so every future download is handled the same way.` },
+];
+
+const UNITS = [
+  { id: "u1", name: "Your workshop", project: "Project 1" },
+  { id: "u2", name: "Describing a property", project: "Project 1" },
+  { id: "u3", name: "The filing cabinet", project: "Project 1" },
+  { id: "u4", name: "Real listings, real data", project: "Project 2" },
+];
+const T = (title, body, code, tip) => ({ kind: "teach", title, body: [].concat(body), code, tip });
+const C = id => ({ kind: "check", id });
+
+const LESSONS = [
+  { id: "l1", u: "u1", title: "The file and the terminal", steps: [
+    T("Two places, two jobs", "A .py file holds instructions. The terminal is where you tell the computer to run them.", `# hello.py  (the file)\nprint("Hello, real estate!")\n\n# terminal  (where you run it)\n% python3 hello.py\nHello, real estate!`, `<b>Most common first mistake:</b> typing python3 hello.py inside the file. Commands always go in the terminal.`),
+    C("s1"),
+    T("Functions and strings", ["print is a function: a built-in command that does one job. Its job is showing text.", "The text in quotes is a string, Python’s word for text. Python reads a file top to bottom and runs each line in order."]),
+    C("s2"),
+    T("Reading the prompt", "The terminal line shows your user, your computer, and the folder the terminal is standing in. The % means it’s waiting for you.", `you@your-mac Real Estate Analyzer % `, `If Python says <b>No such file or directory</b>, the terminal is usually in a different folder than your file.`),
+    C("n7"),
+  ], learned: ["A .py file holds code; the terminal runs it", "print is a function; quotes make a string", "The prompt shows which folder you’re in"] },
+
+  { id: "l2", u: "u1", title: "Virtual environments", steps: [
+    T("A private toolbox", ["Later you’ll install packages: tools other people wrote, like pandas.", "A virtual environment keeps them inside this one project, so two projects can’t break each other."]),
+    C("s3"),
+    T("Create once, turn on every time", "You make the box once per project. You turn it on in every new terminal.", `python3 -m venv .venv        # once\nsource .venv/bin/activate    # every new terminal`, `It’s on when your prompt starts with <b>(.venv)</b>. Check for it before installing anything.`),
+    C("s4"), C("n1"), C("s5"),
+  ], learned: ["A .venv keeps one project’s packages separate", "Create it once; activate it in every new terminal", "(.venv) in the prompt means it’s on"] },
+
+  { id: "l3", u: "u1", title: "Saving work with Git", steps: [
+    T("Snapshots you can go back to", "Git saves snapshots of your project, called commits. If you break something later, you can return to any snapshot."),
+    T("Three steps", "Choose files, save the snapshot, then upload it.", `git add app/                # choose files\ngit commit -m "message"     # save a snapshot\ngit push                    # upload to GitHub`, `Run <b>git status</b> before every commit to see exactly what will be saved.`),
+    C("s6"), C("s12"),
+    T("Git vs. GitHub", "Git is the save-point tool on your computer. GitHub is a website that keeps a copy online: your backup and your portfolio."),
+    C("s7"), C("s11"),
+  ], learned: ["add picks files; commit saves a snapshot; push uploads", "git status shows what will be saved", "Git is local; GitHub is the online copy"] },
+
+  { id: "l4", u: "u1", title: "What stays out, and where files live", steps: [
+    T("The .gitignore file", "This file lists what Git must never save. A * means “anything,” and a trailing / means a whole folder.", `.venv/\n__pycache__/\n.env\n.DS_Store\n*.db\ndata/`),
+    C("s8"), C("s9"),
+    T("Every file has a home", "Each job gets its own folder. app holds your code, data holds listings and the database, and tests holds code that checks code.", `app/\n    __init__.py\n    models.py\n    db.py\ndata/\n    inbox/\n    raw/\ntests/`, `<b>__init__.py</b> is empty on purpose. It labels app/ as a package, so your files can import from each other.`),
+    C("s10"),
+  ], learned: [".gitignore keeps secrets, data, and junk out of Git", "app/ for code, data/ for listings, tests/ for checks", "__init__.py makes app/ importable"] },
+
+  { id: "l5", u: "u2", title: "Classes and objects", steps: [
+    T("A class is a blank form", "Picture a paper form with boxes for address, price, and bedrooms. The form’s design is a class. In your code, that class is called Property."),
+    C("p1"),
+    T("Objects fill out the form", "Filling out one copy for one house makes an object. Each box is a field, and what’s written in it is a value.", `home = Property(address="123 Oak St", price=215000, ...)`),
+    C("p2"),
+    T("Reading one box", "The dot means “look inside this object and get that field.”", `print(home.price)    # 215000`),
+    C("n2"), C("p3"),
+  ], learned: ["Class = the blank form (Property)", "Object = one filled-out form (home)", "object.field reads one value"] },
+
+  { id: "l6", u: "u2", title: "Types", steps: [
+    T("Every box has a type", "The type says what kind of answer goes in a box.", `str     text            "39157"\nint     whole numbers   215000\nfloat   decimals        2.5\ndate    calendar dates  date(2026, 11, 4)\nNone    blank, unknown  None`),
+    C("p4"),
+    T("Choose types from real values", ["Ask what values a field could realistically hold.", "Half baths exist, so baths is a float. Nobody lists 3.5 bedrooms, so beds is an int."], null, `<b>Rule of thumb:</b> if it looks like a number but you’d never do math on it, store it as text.`),
+    C("p5"), C("n11"),
+  ], learned: ["str, int, float, date, and None cover most data", "ZIP codes are text: leading zeros matter", "Choose a type from the values a field can really hold"] },
+
+  { id: "l7", u: "u2", title: "Required and optional", steps: [
+    T("@dataclass does the setup", "Put @dataclass above a class and Python writes the setup and printing code for you. You only list the fields.", `@dataclass\nclass Property:\n    address: str\n    price: int\n    sqft: int | None = None`),
+    C("p11"),
+    T("Must-fill vs. fill-if-you-know", ["A field with no default is must-fill. Leave it out and Python stops you.", "Adding | None = None makes a field optional: blank unless you fill it in. Required fields must come first."]),
+    C("p6"), C("n3"), C("p7"),
+    T("None isn’t zero", "None means unknown. If unknown sizes were stored as 0, averages and price-per-square-foot math would quietly go wrong."),
+    C("p8"), C("p12"),
+  ], learned: ["@dataclass writes the boring setup code", "No default = must-fill; = None = optional", "None means unknown, not zero"] },
+
+  { id: "l8", u: "u2", title: "Imports and errors", steps: [
+    T("Borrowing code", "Each file asks for the tools it needs at the top. Tools come from three places.", `from datetime import date        # comes with Python\nfrom app.models import Property  # your own code\nimport pandas as pd              # installed with pip`),
+    C("p10"),
+    T("Errors are messages", "Read the last line first. It names the kind of error and what went wrong. The lines above it show which file and line.", `TypeError: Property.__init__() missing 1 required\npositional argument: 'price'`, `Break things on purpose while learning. It’s the fastest way to learn what errors mean.`),
+    C("p13"), C("p9"),
+  ], learned: ["Each file imports what it uses", "Standard library, packages, and your own code", "Read an error’s last line first"] },
+
+  { id: "l9", u: "u3", title: "Memory vs. a database", steps: [
+    T("Why the test house disappears", "While a script runs, variables live in memory. When the script ends, memory is wiped, like a whiteboard."),
+    C("d1"),
+    T("A notebook on disk", "A database saves data to a file, so it’s still there tomorrow and you can search it. SQLite keeps everything in one file and comes with Python.", `data/properties.db`),
+    C("d2"),
+  ], learned: ["Memory is wiped when a script ends", "A database file keeps data between runs", "SQLite is one file, built into Python"] },
+
+  { id: "l10", u: "u3", title: "Tables in SQL", steps: [
+    T("Your form, in SQL", "A table works like a spreadsheet: each column is a field, and each row is one property.", `CREATE TABLE IF NOT EXISTS properties (\n    id INTEGER PRIMARY KEY,\n    address TEXT NOT NULL,\n    price INTEGER NOT NULL,\n    baths REAL,\n    UNIQUE (address, zip_code)\n);`),
+    C("d9"),
+    T("Translating types", "Python and SQL use different names for the same kinds of values. NOT NULL marks a required column.", `str    ->  TEXT\nint    ->  INTEGER\nfloat  ->  REAL\ndate   ->  TEXT   (like 2026-11-04)`),
+    C("d3"), C("n9"), C("d5"),
+    T("Two extras", ["id INTEGER PRIMARY KEY is a receipt number SQLite assigns to each row automatically.", "UNIQUE (address, zip_code) blocks the same house from being saved twice."]),
+    C("d6"), C("d11"),
+  ], learned: ["A table is the form stored on disk", "TEXT, INTEGER, REAL; NOT NULL = required", "UNIQUE blocks duplicate houses"] },
+
+  { id: "l11", u: "u3", title: "Functions in db.py", steps: [
+    T("def makes a function", "A function is a named, reusable job. return hands back a result. Every later project opens the database through this one function.", `def get_connection():\n    return sqlite3.connect(DB_PATH)`),
+    C("p14"),
+    T("Open, run, save, close", "init_db does four things in order.", `def init_db():\n    conn = get_connection()\n    conn.execute(CREATE_PROPERTIES_TABLE)\n    conn.commit()\n    conn.close()`),
+    C("n4"), C("d7"),
+    T("Run me vs. borrow me", "This block runs only when you run the file directly. When another file imports db.py, it’s skipped.", `if __name__ == "__main__":\n    init_db()\n\n# run it with:\n% python3 -m app.db`),
+    C("d8"),
+  ], learned: ["def defines a named, reusable job", "commit saves; forget it and the work is lost", "if __name__ == \"__main__\" runs only when run directly"] },
+
+  { id: "l12", u: "u3", title: "Looking inside", steps: [
+    T("Check with your own eyes", "Open the database and count what’s really there, instead of trusting a printed message.", `% sqlite3 data/properties.db\nsqlite> .tables\nproperties\nsqlite> SELECT COUNT(*) FROM properties;\n0\nsqlite> .quit`),
+    T("Two kinds of commands", "Dot-commands like .tables and .quit are shortcuts and need no semicolon. SQL commands like SELECT must end with a semicolon."),
+    C("d10"), C("d14"),
+  ], learned: ["sqlite3 opens the database for a look", "Dot-commands: no semicolon. SQL: semicolon", "Verify with the data, not the message"] },
+
+  { id: "l13", u: "u4", title: "ETL and getting the data", steps: [
+    T("The pattern", "Project 2 follows ETL. Extract: read the file. Transform: reshape each row into a Property. Load: save them to the database. Most data jobs work this way."),
+    C("e1"),
+    T("Downloading from Redfin", "Search one ZIP code, switch to list view, and click Download All. It needs 20 to 350 homes. Move the file to data/inbox and name it source, ZIP, date.", `redfin_39157_2026-11-04.csv`, `Rename files in <b>VS Code</b>, not Finder. Finder hides extensions, which is how a file ends up named .csv.csv.`),
+    T("Never hand-edit raw data", "Next week’s download will have the same quirks. Fix them once in code, and every future file is handled the same way."),
+    C("e4"),
+  ], learned: ["ETL: Extract, Transform, Load", "Name files source_zip_date", "Fix data quirks in code, never by hand"] },
+
+  { id: "l14", u: "u4", title: "pandas and exploring", steps: [
+    T("Your first package", "pip installs packages into your active .venv. Add each one to requirements.txt, your project’s shopping list.", `% pip install pandas`),
+    C("e16"),
+    T("DataFrames", "pandas reads the file into a DataFrame: a table with rows and named columns. By convention it’s stored as df.", `import pandas as pd\ndf = pd.read_csv("data/inbox/redfin_39157_2026-11-04.csv")`),
+    C("e2"), C("e3"),
+    T("Ask the data questions", "Look before you build. NaN is pandas’ word for blank.", `print(df.shape)         # (rows, columns)\nprint(df.dtypes)        # the types pandas guessed\nprint(df.isna().sum())  # blanks per column`),
+    C("n6"),
+  ], learned: ["pip installs packages; requirements.txt lists them", "A DataFrame is a table you control with code", "shape, dtypes, and isna reveal surprises"] },
+
+  { id: "l15", u: "u4", title: "Three surprises in real data", steps: [
+    T("Surprise 1: a row with no address", "Almost every column had exactly one blank. The cause was Redfin’s note row saying some MLS listings aren’t included.", `df = df.dropna(subset=["ADDRESS"])`),
+    C("e6"), C("n5"),
+    T("Surprise 2: ZIP codes like 39157.0", "pandas guessed “number.” A ZIP starting with 0 would have lost it. The fix tells pandas not to guess.", `pd.read_csv(path, dtype={"ZIP OR POSTAL CODE": str})`),
+    C("e5"),
+    T("Surprise 3: beds shown as 3.0", "A whole-number column can’t hold NaN, so a single blank turns the whole column into decimals. Each value gets converted back in the transform step."),
+    C("e7"),
+  ], learned: ["dropna removes the note row", "dtype={...: str} keeps ZIP codes as text", "Blanks turn whole-number columns into decimals"] },
+
+  { id: "l16", u: "u4", title: "Transform: rows into Properties", steps: [
+    T("The column map", "Each Redfin column fills one box on your form. Names must match the file’s header exactly.", `ADDRESS             ->  address\nZIP OR POSTAL CODE  ->  zip_code\nPRICE               ->  price\nBEDS                ->  beds\n(no column)         ->  source = "redfin"`),
+    C("e8"),
+    T("A small helper", "Blank becomes None; 3.0 becomes 3. Writing this once and reusing it for every field is called DRY: don’t repeat yourself.", `def to_int(value):\n    if pd.isna(value):\n        return None\n    return int(value)`),
+    C("e9"), C("e10"),
+    T("Loops and lists", "A for loop repeats steps for each row. A list collects the results in order, counted from 0.", `properties = []\nfor _, row in df.iterrows():\n    properties.append(row_to_property(row, today))`),
+    C("n10"), C("e11"), C("p15"),
+  ], learned: ["The column map links Redfin’s names to yours", "Helpers like to_int keep code DRY", "for loops repeat; lists collect results"] },
+
+  { id: "l17", u: "u4", title: "Load and the inbox", steps: [
+    T("Saving safely", "OR IGNORE skips a house that’s already saved. :address is a placeholder that SQLite fills in safely.", `INSERT OR IGNORE INTO properties (address, ...)\nVALUES (:address, ...)`),
+    C("d13"), C("d12"),
+    T("One command for new data", "The importer reads every CSV in data/inbox, saves the properties, then moves each file to data/raw.", `% python3 -m app.import_redfin\nredfin_39157_2026-11-04.csv: read 103, saved 103 new`),
+    C("e13"), C("e12"),
+    T("Load everything, clean later", "All 103 listings are saved, including vacant land and floor plans. Deciding what counts as a comp is Project 3’s job: cleaning."),
+    C("e14"), C("e15"),
+  ], learned: ["INSERT OR IGNORE plus UNIQUE prevents duplicates", "Placeholders keep SQL safe", "Drop a file in the inbox and run one command"] },
+];
+
+const BUGS = {
+  l1: { name: "LOSTFILE", type: "TERMINAL", desc: "Appears when you run a file from the wrong folder: No such file or directory.", weak: "Checking your prompt" },
+  l2: { name: "NOMODULE", type: "TERMINAL", desc: "Shows up when a package was installed outside your .venv.", weak: "source .venv/bin/activate" },
+  l3: { name: "UNSAVED", type: "GIT", desc: "Eats any work that was never committed.", weak: "git add, commit, push" },
+  l4: { name: "LEAKBIT", type: "GIT", desc: "Sneaks secrets like API keys onto GitHub.", weak: ".gitignore" },
+  l5: { name: "ATTRIBUG", type: "PYTHON", desc: "Attacks when you ask an object for a field it doesn’t have.", weak: "object.field" },
+  l6: { name: "ZIPDROP", type: "PYTHON", desc: "Steals leading zeros: 02134 becomes 2134.", weak: "str for ZIP codes" },
+  l7: { name: "TYPERR", type: "PYTHON", desc: "Strikes forms with a missing must-fill box: TypeError.", weak: "Required fields" },
+  l8: { name: "NAMEGONE", type: "PYTHON", desc: "Hides in files that forgot an import: NameError.", weak: "Each file imports what it uses" },
+  l9: { name: "WIPEOUT", type: "SQL", desc: "Erases everything in memory the moment a script ends.", weak: "A database file" },
+  l10: { name: "DUPLING", type: "SQL", desc: "Copies the same house into your table twice.", weak: "UNIQUE (address, zip_code)" },
+  l11: { name: "UNCOMMIT", type: "SQL", desc: "Throws away database changes that were never committed.", weak: "conn.commit()" },
+  l12: { name: "SEMIKOL", type: "SQL", desc: "Leaves the sqlite> prompt waiting forever at ...>", weak: "A semicolon" },
+  l13: { name: "SMUDGE", type: "DATA", desc: "Lives in raw data files that were edited by hand.", weak: "Fixing quirks in code" },
+  l14: { name: "NANITE", type: "DATA", desc: "A tiny blank that hides in DataFrames as NaN.", weak: "df.isna().sum()" },
+  l15: { name: "FLOATZIP", type: "DATA", desc: "Turns ZIP codes into decimals like 39157.0.", weak: "dtype={...: str}" },
+  l16: { name: "REPEATO", type: "DATA", desc: "Copies the same three lines of code everywhere.", weak: "DRY helper functions" },
+  l17: { name: "INJECTO", type: "SQL", desc: "Slips commands into SQL that was built by hand.", weak: "Placeholders like :address" },
+};
+const TYPE_COLORS = {
+  TERMINAL: ["#9A78E0", "#5E40A8"], GIT: ["#EE8547", "#A84E1C"], PYTHON: ["#4E9AE6", "#275E9E"],
+  SQL: ["#3DB377", "#1D7347"], DATA: ["#E8BE3E", "#97761A"],
+};
+const BADGES = {
+  u1: { name: "Terminal Badge", color: "#9A78E0" }, u2: { name: "Blueprint Badge", color: "#4E9AE6" },
+  u3: { name: "Vault Badge", color: "#3DB377" }, u4: { name: "Pipeline Badge", color: "#E8BE3E" },
+};
+
+/* ---------- Art (smooth SVG) ---------- */
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) {
+  return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function tint(hex, a) {
+  const n = parseInt(hex.slice(1), 16), m = c => Math.round(c + (255 - c) * a);
+  return "#" + [n >> 16, (n >> 8) & 255, n & 255].map(c => m(c).toString(16).padStart(2, "0")).join("");
+}
+function art(svg, w, cls) {
+  const s = document.createElement("span");
+  s.className = "art" + (cls ? " " + cls : "");
+  s.setAttribute("aria-hidden", "true");
+  s.innerHTML = svg;
+  if (w) s.style.width = w + "px";
+  return s;
+}
+let GID = 0;
+function bugSvg(name, type, seen) {
+  const r = rng(hashStr(name));
+  const [base, dark] = TYPE_COLORS[type];
+  const SIL = "#3B406A", SIL_D = "#30355A";
+  const id = "bg" + (++GID);
+  const fill = seen ? "url(#" + id + ")" : SIL;
+  const dk = seen ? dark : SIL_D;
+  const tip = seen ? tint(base, 0.55) : SIL;
+  const st = seen ? ' stroke="' + dark + '" stroke-width="2.5" stroke-linejoin="round"' : "";
+  const shape = Math.floor(r() * 4), feat = Math.floor(r() * 5), oneEye = r() < 0.25, mouth = Math.floor(r() * 4), belly = r() < 0.6;
+  const top = [28, 22, 34, 26][shape];
+  let s = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">';
+  if (seen) s += '<defs><radialGradient id="' + id + '" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="' + tint(base, 0.5) + '"/><stop offset="0.55" stop-color="' + base + '"/><stop offset="1" stop-color="' + dark + '"/></radialGradient></defs>';
+  if (feat === 0) s += '<path d="M40 ' + (top + 8) + ' Q34 ' + (top - 6) + ' 28 ' + (top - 14) + ' M60 ' + (top + 8) + ' Q66 ' + (top - 6) + ' 72 ' + (top - 14) + '" fill="none" stroke="' + dk + '" stroke-width="3" stroke-linecap="round"/><circle cx="28" cy="' + (top - 14) + '" r="5.5" fill="' + tip + '"' + st + '/><circle cx="72" cy="' + (top - 14) + '" r="5.5" fill="' + tip + '"' + st + '/>';
+  if (feat === 1) s += '<path d="M30 ' + (top + 12) + ' L25 ' + (top - 12) + ' L44 ' + (top + 4) + ' Z M70 ' + (top + 12) + ' L75 ' + (top - 12) + ' L56 ' + (top + 4) + ' Z" fill="' + tip + '"' + st + '/>';
+  if (feat === 2) s += '<circle cx="28" cy="' + (top + 8) + '" r="11" fill="' + fill + '"' + st + '/><circle cx="72" cy="' + (top + 8) + '" r="11" fill="' + fill + '"' + st + '/>';
+  if (feat === 3) s += '<path d="M35 ' + (top + 7) + ' L39 ' + (top - 10) + ' L46 ' + (top + 3) + ' Z M44 ' + (top + 2) + ' L50 ' + (top - 15) + ' L56 ' + (top + 2) + ' Z M54 ' + (top + 3) + ' L61 ' + (top - 10) + ' L65 ' + (top + 7) + ' Z" fill="' + tip + '"' + st + '/>';
+  if (feat === 4) s += '<path d="M50 ' + (top + 4) + ' L50 ' + (top - 8) + '" stroke="' + dk + '" stroke-width="3" stroke-linecap="round"/><path d="M50 ' + (top - 8) + ' Q58 ' + (top - 22) + ' 70 ' + (top - 14) + ' Q60 ' + (top - 3) + ' 50 ' + (top - 8) + ' Z" fill="' + tip + '"' + st + '/>';
+  s += '<ellipse cx="36" cy="88" rx="10" ry="5.5" fill="' + dk + '"/><ellipse cx="64" cy="88" rx="10" ry="5.5" fill="' + dk + '"/>';
+  s += ['<circle cx="50" cy="58" r="30"', '<ellipse cx="50" cy="55" rx="27" ry="33"', '<path d="M16 86 Q12 36 50 34 Q88 36 84 86 Q50 92 16 86 Z"', '<rect x="20" y="26" width="60" height="60" rx="26"'][shape] + ' fill="' + fill + '"' + st + '/>';
+  if (!seen) return s + '<text x="50" y="' + (top + 41) + '" text-anchor="middle" font-family="Fredoka, Nunito, Arial, sans-serif" font-weight="700" font-size="30" fill="#7178AA">?</text></svg>';
+  if (belly) s += '<ellipse cx="50" cy="' + (top + 43) + '" rx="15" ry="10" fill="#FFFFFF" opacity="0.3"/>';
+  const ey = top + 20;
+  const eye = (x, rr) => '<circle cx="' + x + '" cy="' + ey + '" r="' + rr + '" fill="#FFFFFF" stroke="' + dark + '" stroke-width="2"/><circle cx="' + (x + 1) + '" cy="' + (ey + 1) + '" r="' + rr * 0.5 + '" fill="#1E2236"/><circle cx="' + (x + 2.4) + '" cy="' + (ey - 1.4) + '" r="' + rr * 0.2 + '" fill="#FFFFFF"/>';
+  s += oneEye ? eye(50, 11) : eye(40, 8) + eye(60, 8);
+  const my = ey + (oneEye ? 18 : 15);
+  const smile = '<path d="M42 ' + my + ' Q50 ' + (my + 7) + ' 58 ' + my + '" fill="none" stroke="#1E2236" stroke-width="3" stroke-linecap="round"/>';
+  if (mouth === 0) s += smile;
+  if (mouth === 1) s += smile + '<path d="M45 ' + (my + 1.8) + ' L47 ' + (my + 6) + ' L49 ' + (my + 2.8) + ' Z" fill="#FFFFFF"/>';
+  if (mouth === 2) s += '<ellipse cx="50" cy="' + (my + 2) + '" rx="4" ry="5" fill="#1E2236"/>';
+  if (mouth === 3) s += '<polyline points="42,' + my + ' 46,' + (my + 3) + ' 50,' + my + ' 54,' + (my + 3) + ' 58,' + my + '" fill="none" stroke="#1E2236" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+  const cx = oneEye ? 14 : 19;
+  s += '<circle cx="' + (50 - cx) + '" cy="' + (my - 2) + '" r="3.5" fill="#FF8FA3" opacity="0.5"/><circle cx="' + (50 + cx) + '" cy="' + (my - 2) + '" r="3.5" fill="#FF8FA3" opacity="0.5"/>';
+  return s + "</svg>";
+}
+const bugArt = (id, w, seen) => art(bugSvg(BUGS[id].name, BUGS[id].type, seen), w);
+
+const SKIN = "#F2C6A0", HAIR = "#5A3A28", SHIRT = "#3E6FD8", SHIRT_D = "#2C55B0";
+const HERO_FRONT = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M18 102 Q18 70 50 68 Q82 70 82 102 Z" fill="' + SHIRT + '" stroke="' + SHIRT_D + '" stroke-width="2.5"/>'
+  + '<path d="M42 68 L50 78 L58 68" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>'
+  + '<rect x="44" y="58" width="12" height="11" fill="' + SKIN + '"/>'
+  + '<circle cx="50" cy="42" r="22" fill="' + SKIN + '"/>'
+  + '<path d="M27 46 Q22 16 50 15 Q78 16 73 46 Q71 32 60 28 Q48 35 31 33 Z" fill="' + HAIR + '"/>'
+  + '<circle cx="42" cy="46" r="2.8" fill="#1E2236"/><circle cx="58" cy="46" r="2.8" fill="#1E2236"/>'
+  + '<path d="M44 54 Q50 59 56 54" fill="none" stroke="#1E2236" stroke-width="2.4" stroke-linecap="round"/>'
+  + '<circle cx="36" cy="52" r="3" fill="#FF8FA3" opacity="0.5"/><circle cx="64" cy="52" r="3" fill="#FF8FA3" opacity="0.5"/></svg>';
+const HERO_BACK = '<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">'
+  + '<rect x="30" y="72" width="40" height="34" rx="10" fill="#F2A93B" stroke="#C47E14" stroke-width="2.5"/>'
+  + '<path d="M12 112 Q12 66 50 64 Q88 66 88 112 Z" fill="' + SHIRT + '" stroke="' + SHIRT_D + '" stroke-width="2.5"/>'
+  + '<rect x="32" y="78" width="36" height="30" rx="9" fill="#FFB547" stroke="#C47E14" stroke-width="2.5"/>'
+  + '<path d="M32 70 L34 80 M68 70 L66 80" stroke="#C47E14" stroke-width="5" stroke-linecap="round"/>'
+  + '<circle cx="25" cy="42" r="6" fill="' + SKIN + '"/><circle cx="75" cy="42" r="6" fill="' + SKIN + '"/>'
+  + '<circle cx="50" cy="38" r="26" fill="' + HAIR + '"/>'
+  + '<path d="M32 24 Q50 8 68 24" fill="none" stroke="#7A5440" stroke-width="3" stroke-linecap="round"/></svg>';
+const PROF_SVG = '<svg viewBox="0 0 100 104" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M14 106 Q14 72 50 70 Q86 72 86 106 Z" fill="#FFFFFF" stroke="#C3C9DA" stroke-width="2.5"/>'
+  + '<rect x="44" y="60" width="12" height="11" fill="' + SKIN + '"/>'
+  + '<path d="M46 71 L54 71 L52.5 78 L56 96 L50 102 L44 96 L47.5 78 Z" fill="#E5533F"/>'
+  + '<path d="M50 72 L38 92 M50 72 L62 92" stroke="#C3C9DA" stroke-width="2.5"/>'
+  + '<circle cx="27" cy="40" r="11" fill="#C9CCD8"/><circle cx="73" cy="40" r="11" fill="#C9CCD8"/>'
+  + '<circle cx="50" cy="42" r="22" fill="' + SKIN + '"/>'
+  + '<path d="M29 36 Q33 18 50 20 Q67 18 71 36 Q61 27 50 29 Q39 27 29 36 Z" fill="#C9CCD8"/>'
+  + '<circle cx="42" cy="44" r="6.5" fill="#DDF1FB" stroke="#1E2236" stroke-width="2"/><circle cx="58" cy="44" r="6.5" fill="#DDF1FB" stroke="#1E2236" stroke-width="2"/>'
+  + '<path d="M48.5 44 L51.5 44" stroke="#1E2236" stroke-width="2"/>'
+  + '<circle cx="42.5" cy="44.5" r="2.2" fill="#1E2236"/><circle cx="58.5" cy="44.5" r="2.2" fill="#1E2236"/>'
+  + '<path d="M40 55 Q45 51 50 55 Q55 51 60 55 Q55 59 50 57 Q45 59 40 55 Z" fill="#C9CCD8"/>'
+  + '<path d="M46 60 Q50 62.5 54 60" fill="none" stroke="#1E2236" stroke-width="2" stroke-linecap="round"/></svg>';
+function badgeArt(color, got, w) {
+  return art('<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1.8l3.1 6.4 7 .9-5.1 4.9 1.3 7L12 17.7 5.7 21l1.3-7L1.9 9.1l7-.9z" fill="' + (got ? color : "#DCE0EC") + '" stroke="' + (got ? tint("#000000", 0.35) : "#C3C8D8") + '" stroke-width="1.4" stroke-linejoin="round"/>' + (got ? '<path d="M8.5 9.5 L11 7" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>' : "") + "</svg>", w, "badge");
+}
+
+/* ---------- Progress ---------- */
+const KEY = "deal-analyzer-drills-v1";
+const ROUND = 10;
+const blank = () => ({ xp: 0, days: [], q: {}, cards: {}, lessons: {} });
+function load() {
+  try { const raw = JSON.parse(localStorage.getItem(KEY)); if (raw && typeof raw === "object") return Object.assign(blank(), raw); } catch (e) {}
+  return blank();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+let P = load();
+if (!P.lessons || typeof P.lessons !== "object") P.lessons = {};
+const QBY = Object.fromEntries(QS.map(q => [q.id, q]));
+let view = { name: "map" };
+
+const $app = document.getElementById("app");
+const $live = document.getElementById("live");
+const mount = (...k) => $app.append(...k.flat(Infinity).filter(x => x != null && x !== false));
+const announce = m => { $live.textContent = m; };
+const topicName = id => (TOPICS.find(t => t.id === id) || {}).name || "";
+const level = xp => 1 + Math.floor(xp / 100);
+const lessonDone = l => !!(P.lessons[l.id] && P.lessons[l.id].done);
+const nextLesson = () => LESSONS.find(l => !lessonDone(l));
+const unitDone = u => LESSONS.filter(l => l.u === u.id).every(lessonDone);
+const mastered = q => P.q[q.id] && P.q[q.id].last === true;
+const missed = () => QS.filter(q => P.q[q.id] && P.q[q.id].last === false);
+const checksIn = l => l.steps.filter(s => s.kind === "check").length;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return n;
+}
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const fmtDate = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = () => fmtDate(new Date());
+function markDay() { const t = today(); if (!P.days.includes(t)) { P.days.push(t); P.days = P.days.slice(-90); } }
+function streak() { const s = new Set(P.days); const d = new Date(); if (!s.has(fmtDate(d))) d.setDate(d.getDate() - 1); let n = 0; while (s.has(fmtDate(d))) { n++; d.setDate(d.getDate() - 1); } return n; }
+function pickRound(pool) { return shuffle(shuffle(pool).sort((a, b) => (mastered(a) ? 1 : 0) - (mastered(b) ? 1 : 0)).slice(0, ROUND)); }
+function go(name, extra) { view = Object.assign({ name }, extra || {}); render(); }
+
+/* ---------- Shared pieces ---------- */
+function trainerCard() {
+  const lv = level(P.xp), into = P.xp % 100, st = streak();
+  return el("section", { class: "card trainer", "aria-label": "Your trainer card" },
+    el("div", { class: "avatar" }, art(HERO_FRONT)),
+    el("div", { class: "who" },
+      el("div", { class: "row" }, el("span", { class: "name" }, "Coder · Lv " + lv), el("span", { class: "chip" }, "🔥 " + st + (st === 1 ? " day" : " days"))),
+      el("div", { class: "bar", role: "progressbar", "aria-label": "Experience to next level", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(into) }, el("i", { style: "width:" + into + "%" })),
+      el("span", { class: "small" }, into + " / 100 EXP to Lv " + (lv + 1))),
+    el("div", { class: "badges", "aria-label": "Badges" },
+      el("span", { class: "kicker" }, "Badges"),
+      UNITS.map(u => { const b = badgeArt(BADGES[u.id].color, unitDone(u)); b.setAttribute("aria-hidden", "false"); b.setAttribute("role", "img"); b.setAttribute("aria-label", BADGES[u.id].name + (unitDone(u) ? ", earned" : ", not yet earned")); b.title = BADGES[u.id].name; return b; })));
+}
+function tabs(active) {
+  const mk = (name, label) => el("button", { class: "tab", role: "tab", "aria-selected": String(active === name), onclick: () => { if (active !== name) go(name); } }, label);
+  return el("nav", { class: "tabs", role: "tablist", "aria-label": "Game mode" }, mk("map", "Map"), mk("training", "Training"), mk("log", "Bug Log"));
+}
+function topbar(done, total, back) {
+  return el("div", { class: "topbar" },
+    el("button", { class: "icon-btn", "aria-label": back === "map" ? "Back to the map" : "Back to training", onclick: () => go(back) }, "✕"),
+    el("div", { class: "bar", role: "progressbar", "aria-label": "Progress", "aria-valuemin": "0", "aria-valuemax": String(total), "aria-valuenow": String(done) }, el("i", { style: "width:" + Math.round(100 * done / total) + "%" })),
+    el("span", { class: "count" }, done + " / " + total));
+}
+function hpBar(cur, max) {
+  const pct = Math.max(0, Math.round(100 * cur / max));
+  const col = pct > 50 ? "var(--hp-hi)" : pct > 20 ? "var(--hp-mid)" : "var(--hp-low)";
+  return el("div", { class: "hp" }, el("b", null, "HP"), el("div", { class: "bar" }, el("i", { style: "width:" + pct + "%;background:" + col })));
+}
+function scene(bugId, foeHp, foeMax, meHp, anim) {
+  const b = BUGS[bugId];
+  return el("div", { class: "scene", role: "img", "aria-label": "Battle: wild " + b.name + " has " + foeHp + " of " + foeMax + " HP. You have " + meHp + " HP." },
+    el("div", { class: "cloud c1" }), el("div", { class: "cloud c2" }),
+    el("div", { class: "plat foe" }), el("div", { class: "plat me" }),
+    el("div", { class: "spr foe" + (anim === "foe" ? " flash" : "") + (anim === "enter" ? " enter" : "") + (foeHp <= 0 ? " defeated" : " idle") }, bugArt(bugId, null, true)),
+    el("div", { class: "spr me" + (anim === "me" ? " shake" : "") }, art(HERO_BACK)),
+    el("div", { class: "hud foe" + (anim === "foe" ? " shake" : "") },
+      el("div", { class: "nm" }, el("span", { class: "who-n" }, b.name), el("span", { class: "lv" }, "Lv " + (LESSONS.findIndex(l => l.id === bugId) + 3))),
+      hpBar(foeHp, foeMax)),
+    el("div", { class: "hud me" },
+      el("div", { class: "nm" }, el("span", { class: "who-n" }, "Coder"), el("span", { class: "lv" }, "Lv " + level(P.xp))),
+      hpBar(meHp, 100),
+      el("span", { class: "hp-n" }, meHp + " / 100")));
+}
+function moveList(q, order, picked, onPick) {
+  const done = picked !== null;
+  return el("div", { class: "moves", role: "group", "aria-label": "Choose your answer" },
+    order.map((src, k) => {
+      let cls = "move", tag = null, key = "ABCD"[k];
+      if (done) {
+        if (src === 0) { cls += " ok"; tag = "Correct answer"; key = "✓"; }
+        else if (k === picked) { cls += " no"; tag = "Your answer"; key = "✕"; }
+        else cls += " dim";
+      }
+      return el("button", { class: cls, disabled: done, onclick: () => onPick(k) },
+        el("span", { class: "key", "aria-hidden": "true" }, key),
+        el("span", { class: "txt" }, q.a[src], tag ? el("span", { class: "tag" }, tag) : null));
+    }));
+}
+function focusNext() { const c = document.getElementById("continue"); if (c) c.focus(); }
+
+/* ---------- Render ---------- */
+function render() {
+  $app.replaceChildren();
+  ({ map: renderMap, training: renderTraining, log: renderLog, lesson: renderLesson, lessonDone: renderLessonDone,
+     battle: renderBattle, battleDone: renderBattleDone, cards: renderCards, cardsDone: renderCardsDone })[view.name]();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Map ---------- */
+function renderMap() {
+  const nxt = nextLesson();
+  mount(
+    trainerCard(),
+    tabs("map"),
+    nxt
+      ? el("button", { class: "btn btn-go btn-block btn-stack", onclick: () => startLesson(nxt) },
+          LESSONS.some(lessonDone) ? "Continue your journey" : "Start your journey",
+          el("span", { class: "btn-sub" }, "Stop " + (LESSONS.indexOf(nxt) + 1) + ": " + nxt.title))
+      : el("div", { class: "banner" }, el("p", { class: "t" }, "All 4 badges earned!"), el("p", null, "Every route is cleared. Train to stay sharp, or replay any stop.")),
+    el("p", { class: "note" }, "Tap any stop to jump to it, even ones ahead of you."),
+    UNITS.map((u, ui) => {
+      const ls = LESSONS.filter(l => l.u === u.id);
+      return el("section", { class: "route", "aria-label": "Route " + (ui + 1) + ": " + u.name },
+        el("div", { class: "route-head" },
+          el("span", { class: "kicker" }, "Route " + (ui + 1) + " · " + u.project),
+          el("h2", null, u.name),
+          el("span", { class: "prize" }, badgeArt(BADGES[u.id].color, unitDone(u)), unitDone(u) ? BADGES[u.id].name + " earned" : "Prize: " + BADGES[u.id].name)),
+        el("ol", { class: "stops" }, ls.map(l => {
+          const n = LESSONS.indexOf(l) + 1;
+          const done = lessonDone(l), isNext = nxt && nxt.id === l.id;
+          const meta = done ? "✓ " + BUGS[l.id].name + " logged · replay" : isNext ? "You are here · " + checksIn(l) + " battles" : checksIn(l) + " battles ahead";
+          return el("li", { class: "stop" + (done ? " is-done" : "") + (isNext ? " is-next" : "") },
+            el("div", { class: "tile" }, bugArt(l.id, null, done)),
+            el("button", { class: "stop-btn", onclick: () => startLesson(l), "aria-label": "Stop " + n + ": " + l.title + ". " + meta },
+              el("span", { class: "t" }, n + ". " + l.title),
+              el("span", { class: "m" }, meta)),
+            el("div", { class: "here" }, isNext ? art(HERO_FRONT) : null));
+        })));
+    })
+  );
+}
+
+/* ---------- Lessons ---------- */
+function startLesson(l) {
+  go("lesson", { L: l, steps: l.steps.map(s => Object.assign({}, s)), i: 0, picked: null, order: shuffle([0, 1, 2, 3]),
+    foeMax: checksIn(l), foeHp: checksIn(l), meHp: 100, met: false, anim: null, xpGained: 0, misses: 0, lvBefore: level(P.xp) });
+}
+function lessonAnswer(k) {
+  if (view.picked !== null) return;
+  const q = QBY[view.steps[view.i].id];
+  const right = view.order[k] === 0;
+  view.picked = k;
+  const s = P.q[q.id] || { r: 0, w: 0 };
+  if (right) { s.r++; P.xp += 10; view.xpGained += 10; view.foeHp = Math.max(0, view.foeHp - 1); view.anim = "foe"; }
+  else { s.w++; view.misses++; view.meHp = Math.max(10, view.meHp - 20); view.anim = "me"; }
+  s.last = right; P.q[q.id] = s;
+  markDay(); save();
+  announce(right ? "Correct. Super effective." : "Missed. The answer is " + q.a[0] + ". This question comes back later.");
+  render(); focusNext();
+}
+function lessonNext() {
+  const st = view.steps[view.i];
+  if (st.kind === "check" && view.picked !== null && view.order[view.picked] !== 0) view.steps.push({ kind: "check", id: st.id, retry: true });
+  if (st.kind === "check") view.met = true;
+  view.i++; view.picked = null; view.anim = null; view.order = shuffle([0, 1, 2, 3]);
+  if (view.i >= view.steps.length) {
+    const first = !lessonDone(view.L);
+    const unit = UNITS.find(u => u.id === view.L.u);
+    const unitBefore = unitDone(unit);
+    const bonus = first ? 20 : 0;
+    P.xp += bonus;
+    P.lessons[view.L.id] = { done: true, at: today() };
+    markDay(); save();
+    go("lessonDone", { L: view.L, xp: view.xpGained + bonus, bonus, misses: view.misses, first,
+      leveled: level(P.xp) > view.lvBefore, badge: !unitBefore && unitDone(unit) ? unit : null });
+    focusNext();
+    return;
+  }
+  const nx = view.steps[view.i];
+  if (nx.kind === "check" && !view.met) view.anim = "enter";
+  render(); focusNext();
+}
+
+function renderLesson() {
+  const st = view.steps[view.i];
+  const L = view.L;
+  const bar = topbar(view.i, view.steps.length, "map");
+  if (st.kind === "teach") {
+    const hint = st.tip ? el("div", { class: "hintbox" }, el("span", { class: "kicker" }, "Hint")) : null;
+    if (hint) { const span = document.createElement("span"); span.innerHTML = st.tip; hint.append(span); }
+    mount(bar,
+      el("div", { class: "prof" },
+        el("div", { class: "portrait" }, art(PROF_SVG)),
+        el("div", { class: "speaker" }, el("span", { class: "n" }, "Prof. Parcel"), el("span", { class: "s" }, "Stop " + (LESSONS.indexOf(L) + 1) + " · " + L.title))),
+      el("div", { class: "dialog" },
+        el("h2", null, st.title),
+        st.body.map(p => el("p", null, p)),
+        st.code ? el("pre", { class: "code" }, st.code) : null,
+        hint),
+      el("button", { id: "continue", class: "btn btn-yellow btn-block", onclick: lessonNext }, "Next"));
+    return;
+  }
+  const q = QBY[st.id];
+  const b = BUGS[L.id];
+  const done = view.picked !== null;
+  const right = done && view.order[view.picked] === 0;
+  const intro = !view.met ? "A wild " + b.name + " appeared!" : st.retry ? b.name + " is back for another round!" : null;
+  mount(bar,
+    scene(L.id, view.foeHp, view.foeMax, view.meHp, view.anim),
+    el("div", { class: "dialog" },
+      intro && !done ? el("p", { class: "announce" }, intro) : null,
+      el("h2", null, q.q),
+      q.code ? el("pre", { class: "code" }, q.code) : null,
+      done ? el("div", { class: "result " + (right ? "result-good" : "result-bad") },
+        el("span", { class: "verdict" }, right ? (view.foeHp === 0 ? b.name + " was defeated!" : "Super effective! +10 EXP") : b.name + " dodged your answer!"),
+        el("p", null, el("b", null, "Why: "), q.why),
+        right ? null : el("p", { class: "muted", style: "font-size:15px" }, "This one comes back before the stop ends.")) : null),
+    moveList(q, view.order, view.picked, lessonAnswer),
+    done ? el("button", { id: "continue", class: "btn btn-yellow btn-block", onclick: lessonNext }, "Next") : el("p", { class: "note" }, "Tap an answer, or press A to D."));
+}
+
+function renderLessonDone() {
+  const L = view.L, b = BUGS[L.id], n = LESSONS.indexOf(L) + 1, nxt = LESSONS[n];
+  mount(
+    topbar(1, 1, "map"),
+    view.leveled ? el("div", { class: "banner" }, el("p", { class: "t" }, "Level up!"), el("p", null, "You reached Lv " + level(P.xp) + ".")) : null,
+    view.badge ? el("div", { class: "banner", style: "background:" + BADGES[view.badge.id].color + ";color:#FFFFFF" }, el("p", { class: "t" }, "Badge earned!"), el("p", null, "You cleared Route " + (UNITS.indexOf(view.badge) + 1) + " and earned the " + BADGES[view.badge.id].name + ".")) : null,
+    el("section", { class: "card" },
+      el("div", { class: "catch" },
+        el("div", { class: "pic" }, bugArt(L.id, null, true)),
+        el("div", null,
+          el("span", { class: "kicker" }, "#" + String(n).padStart(2, "0") + " · " + b.type),
+          el("h2", null, b.name + (view.first ? " logged!" : " defeated again!")),
+          el("p", { style: "font-size:15px" }, b.desc)))),
+    el("div", { class: "dialog" },
+      el("span", { class: "kicker" }, "+" + view.xp + " EXP" + (view.bonus ? " · includes 20 for a first clear" : "") + (view.misses ? " · " + view.misses + " miss" + (view.misses === 1 ? "" : "es") + " fixed" : " · no misses")),
+      el("h2", null, "What you learned"),
+      el("ul", { class: "learned" }, L.learned.map(t => el("li", null, t)))),
+    nxt ? el("button", { id: "continue", class: "btn btn-go btn-block btn-stack", onclick: () => startLesson(nxt) }, "Next stop", el("span", { class: "btn-sub" }, n + 1 + ". " + nxt.title)) : null,
+    el("button", { class: "btn btn-alt btn-block", onclick: () => go("map") }, "Back to the map"));
+}
+
+/* ---------- Training ---------- */
+function renderTraining() {
+  const misses = missed();
+  const known = CARDS.filter(c => P.cards[c.id] === true).length;
+  mount(
+    trainerCard(), tabs("training"),
+    el("button", { class: "btn btn-go btn-block btn-stack", onclick: () => startBattle(pickRound(QS), "Wild battle") }, "Wild battle", el("span", { class: "btn-sub" }, ROUND + " mixed questions, weakest first")),
+    misses.length ? el("button", { class: "btn btn-yellow btn-block", onclick: () => startBattle(shuffle(misses).slice(0, ROUND), "Rematch") }, "Rematch your misses (" + misses.length + ")") : null,
+    el("button", { class: "btn btn-alt btn-block", onclick: () => startCards(CARDS, "All study cards") }, "Study all " + CARDS.length + " cards (" + known + " known)"),
+    el("p", { class: "section-title" }, "Train by topic"),
+    TOPICS.map(t => {
+      const qs = QS.filter(q => q.t === t.id), m = qs.filter(mastered).length, cs = CARDS.filter(c => c.t === t.id);
+      return el("section", { class: "train-row", "aria-label": t.name },
+        el("div", { class: "top" }, el("span", { class: "t" }, t.name), el("span", { class: "small" }, m + " / " + qs.length + " mastered")),
+        el("div", { class: "bar", role: "progressbar", "aria-label": t.name + " mastery", "aria-valuemin": "0", "aria-valuemax": String(qs.length), "aria-valuenow": String(m) }, el("i", { style: "width:" + Math.round(100 * m / qs.length) + "%" })),
+        el("div", { class: "duo" },
+          el("button", { class: "btn btn-go", onclick: () => startBattle(pickRound(qs), t.name) }, "Battle"),
+          el("button", { class: "btn btn-alt", onclick: () => startCards(cs, t.name) }, cs.length + " cards")));
+    }),
+    resetBlock());
+}
+function resetBlock() {
+  if (!view.confirmReset) return el("button", { class: "linkish", onclick: () => { view.confirmReset = true; render(); } }, "Reset progress on this device");
+  return el("div", { class: "confirm", role: "alertdialog", "aria-label": "Reset progress" },
+    el("p", null, el("b", null, "Erase your level, badges, Bug Log, and mastery on this device?"), " This can’t be undone."),
+    el("div", { class: "duo" },
+      el("button", { class: "btn btn-go", onclick: () => { P = blank(); save(); go("training"); announce("Progress reset"); } }, "Erase"),
+      el("button", { class: "btn btn-alt", onclick: () => { view.confirmReset = false; render(); } }, "Keep it")));
+}
+
+function startBattle(items, title) {
+  if (!items.length) return;
+  const logged = LESSONS.filter(lessonDone).map(l => l.id);
+  const pool = logged.length ? logged : LESSONS.map(l => l.id);
+  go("battle", { title, items, i: 0, picked: null, order: shuffle([0, 1, 2, 3]), results: [], bug: pool[Math.floor(Math.random() * pool.length)],
+    foeHp: items.length, foeMax: items.length, meHp: 100, anim: "enter", lvBefore: level(P.xp) });
+}
+function battleAnswer(k) {
+  if (view.picked !== null) return;
+  const q = view.items[view.i], right = view.order[k] === 0;
+  view.picked = k;
+  const s = P.q[q.id] || { r: 0, w: 0 };
+  if (right) { s.r++; P.xp += 10; view.foeHp--; view.anim = "foe"; } else { s.w++; view.meHp = Math.max(10, view.meHp - 15); view.anim = "me"; }
+  s.last = right; P.q[q.id] = s; view.results.push({ q, right });
+  markDay(); save();
+  announce(right ? "Correct" : "Missed. The answer is " + q.a[0]);
+  render(); focusNext();
+}
+function battleNext() {
+  view.i++; view.picked = null; view.anim = null; view.order = shuffle([0, 1, 2, 3]);
+  if (view.i >= view.items.length) { go("battleDone", { title: view.title, results: view.results, bug: view.bug, won: view.foeHp <= 0, leveled: level(P.xp) > view.lvBefore }); focusNext(); return; }
+  render(); focusNext();
+}
+function renderBattle() {
+  const q = view.items[view.i], b = BUGS[view.bug];
+  const done = view.picked !== null, right = done && view.order[view.picked] === 0;
+  mount(
+    topbar(view.i + (done ? 1 : 0), view.items.length, "training"),
+    scene(view.bug, view.foeHp, view.foeMax, view.meHp, view.anim),
+    el("div", { class: "dialog" },
+      view.i === 0 && !done ? el("p", { class: "announce" }, "A wild " + b.name + " appeared!") : null,
+      el("span", { class: "kicker" }, view.title + " · " + topicName(q.t)),
+      el("h2", null, q.q),
+      q.code ? el("pre", { class: "code" }, q.code) : null,
+      done ? el("div", { class: "result " + (right ? "result-good" : "result-bad") },
+        el("span", { class: "verdict" }, right ? "Super effective! +10 EXP" : b.name + " dodged!"),
+        el("p", null, el("b", null, "Why: "), q.why)) : null),
+    moveList(q, view.order, view.picked, battleAnswer),
+    done ? el("button", { id: "continue", class: "btn btn-yellow btn-block", onclick: battleNext }, view.i + 1 >= view.items.length ? "See results" : "Next") : el("p", { class: "note" }, "Tap an answer, or press A to D."));
+}
+function renderBattleDone() {
+  const n = view.results.filter(r => r.right).length, total = view.results.length, b = BUGS[view.bug];
+  const wrong = view.results.filter(r => !r.right).map(r => r.q);
+  mount(
+    topbar(total, total, "training"),
+    view.leveled ? el("div", { class: "banner" }, el("p", { class: "t" }, "Level up!"), el("p", null, "You reached Lv " + level(P.xp) + ".")) : null,
+    el("section", { class: "card" },
+      el("div", { class: "catch" },
+        el("div", { class: "pic" }, bugArt(view.bug, null, true)),
+        el("div", null,
+          el("span", { class: "kicker" }, view.title),
+          el("h2", null, n + " / " + total + " correct"),
+          el("p", { style: "font-size:16px" }, view.won ? "You won! " + b.name + " was defeated. +" + n * 10 + " EXP" : "The wild " + b.name + " got away. +" + n * 10 + " EXP. Rematch the misses below.")))),
+    wrong.length ? el("p", { class: "section-title" }, "Moves to practice") : null,
+    wrong.length ? el("div", { class: "missed" }, wrong.map(q => el("div", { class: "card" },
+      el("p", { style: "font-weight:700" }, q.q, q.code ? el("span", { class: "mono" }, " " + q.code.split("\n")[0]) : null),
+      el("p", { class: "ans" }, "✓ " + q.a[0]),
+      el("p", { class: "muted", style: "font-size:15px" }, q.why)))) : null,
+    wrong.length ? el("button", { id: "continue", class: "btn btn-go btn-block", onclick: () => startBattle(shuffle(wrong), "Rematch") }, "Rematch the " + wrong.length + " I missed") : null,
+    el("button", { id: wrong.length ? null : "continue", class: wrong.length ? "btn btn-yellow btn-block" : "btn btn-go btn-block", onclick: () => startBattle(pickRound(QS), "Wild battle") }, "Another wild battle"),
+    el("button", { class: "btn btn-alt btn-block", onclick: () => go("training") }, "Back to training"));
+}
+
+/* ---------- Study cards ---------- */
+function startCards(cards, title) {
+  if (!cards.length) return;
+  const q = shuffle(cards).sort((a, b) => (P.cards[a.id] === true ? 1 : 0) - (P.cards[b.id] === true ? 1 : 0));
+  go("cards", { title, queue: q, total: cards.length, flipped: false, got: 0, again: 0 });
+}
+function flip() { view.flipped = !view.flipped; render(); if (view.flipped) { const g = document.getElementById("got"); if (g) g.focus(); } }
+function grade(knew) {
+  const c = view.queue.shift();
+  P.cards[c.id] = knew;
+  if (knew) view.got++; else { view.again++; view.queue.push(c); }
+  view.flipped = false; markDay(); save();
+  if (!view.queue.length) { go("cardsDone", { title: view.title, total: view.total, again: view.again }); return; }
+  render();
+}
+function renderCards() {
+  const c = view.queue[0];
+  mount(
+    topbar(view.got, view.total, "training"),
+    el("p", { class: "section-title" }, view.title + " · " + topicName(c.t)),
+    el("button", { class: "card study" + (view.flipped ? " back" : ""), onclick: flip, "aria-label": view.flipped ? "Card answer. Tap to flip back." : "Card term. Tap to flip." },
+      el("span", { class: "kicker" }, view.flipped ? "Answer" : "Term"),
+      el("span", { class: "term" }, c.f),
+      view.flipped ? el("span", { class: "def" }, c.b) : el("span", { class: "muted", style: "font-size:16px" }, "Say the answer out loud, then tap to flip.")),
+    view.flipped
+      ? el("div", { class: "duo" },
+          el("button", { class: "btn btn-alt", onclick: () => grade(false) }, "Still learning"),
+          el("button", { id: "got", class: "btn btn-go", onclick: () => grade(true) }, "Got it"))
+      : el("p", { class: "note" }, view.queue.length + (view.queue.length === 1 ? " card" : " cards") + " left. “Still learning” cards come back at the end."));
+}
+function renderCardsDone() {
+  mount(
+    topbar(view.total, view.total, "training"),
+    el("div", { class: "dialog" },
+      el("span", { class: "kicker" }, view.title),
+      el("h2", null, "All " + view.total + " cards known!"),
+      el("p", null, view.again ? "You needed " + view.again + (view.again === 1 ? " repeat" : " repeats") + " to get there." : "Every card on the first try.")),
+    el("button", { class: "btn btn-go btn-block", onclick: () => startBattle(pickRound(QS), "Wild battle") }, "Test it in a wild battle"),
+    el("button", { class: "btn btn-alt btn-block", onclick: () => go("training") }, "Back to training"));
+}
+
+/* ---------- Bug Log ---------- */
+function renderLog() {
+  const got = LESSONS.filter(lessonDone).length;
+  mount(
+    trainerCard(), tabs("log"),
+    el("p", { class: "section-title" }, "Bug Log · " + got + " / " + LESSONS.length + " logged"),
+    el("p", { class: "note" }, "Clear a stop on the map to log its bug. Each one is a real beginner mistake, and its weakness is the fix."),
+    el("div", { class: "log-grid" }, LESSONS.map((l, i) => {
+      const seen = lessonDone(l), b = BUGS[l.id];
+      return el("article", { class: "entry", "aria-label": seen ? b.name : "Unknown bug " + (i + 1) },
+        el("div", { class: "pic" }, bugArt(l.id, null, seen)),
+        el("div", { class: "top" },
+          el("span", { class: "kicker" }, "#" + String(i + 1).padStart(2, "0")),
+          seen ? el("span", { class: "type", style: "background:" + TYPE_COLORS[b.type][1] }, b.type) : null),
+        el("span", { class: "nm" }, seen ? b.name : "???"),
+        el("p", null, seen ? b.desc : "Clear stop " + (i + 1) + ": " + l.title + "."),
+        seen ? el("p", null, el("b", null, "Weak to: "), b.weak) : null);
+    })));
+}
+
+/* ---------- Keyboard ---------- */
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const map = { a: 0, b: 1, c: 2, d: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+  const k = map[e.key.toLowerCase()];
+  if (k === undefined) {
+    if (view.name === "cards" && e.key === " " && document.activeElement === document.body) { e.preventDefault(); flip(); }
+    return;
+  }
+  if (view.name === "lesson" && view.steps[view.i].kind === "check" && view.picked === null) { e.preventDefault(); lessonAnswer(k); }
+  else if (view.name === "battle" && view.picked === null) { e.preventDefault(); battleAnswer(k); }
+});
+
+render();
+</script>
