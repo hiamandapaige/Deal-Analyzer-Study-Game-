@@ -268,6 +268,7 @@ const TOPICS = [
   { id: "python", name: "Classes, types, imports", blurb: "Designing data, imports, reading errors" },
   { id: "db", name: "Databases and SQL", blurb: "SQLite, tables, saving safely" },
   { id: "pipe", name: "The data pipeline", blurb: "pandas, messy data, ETL" },
+  { id: "clean", name: "Cleaning and testing", blurb: "Text cleaning, rules, pytest, flagging" },
 ];
 
 // Each question: the first option is the correct one; options are shuffled when shown.
@@ -382,6 +383,36 @@ const QS = [
   { id: "n9", t: "db", q: `Which column definition makes price required?`, a: [`price INTEGER NOT NULL`, `price INTEGER`, `price REQUIRED`, `NOT price INTEGER`], why: `NOT NULL comes after the type and means the column can never be blank.` },
   { id: "n10", t: "core", q: `Fill in the blank to add each result to the end of the list:`, code: `properties = []\nfor _, row in df.iterrows():\n    properties.______(row_to_property(row, today))`, a: [`append`, `add`, `push`, `insert_end`], why: `Start empty, loop, append: the build-a-list pattern.` },
   { id: "n11", t: "python", q: `Which type should a phone number be?`, a: [`str`, `int`, `float`, `date`], why: `Same rule as ZIP codes: it looks like a number, but you never do math on it, and leading zeros or dashes would break as a number.` },
+  // Cleaning and testing (Project 3)
+  { id: "q1", t: "clean", q: `Why look at the data before writing cleaning rules?`, a: [`So the rules match what’s really there, like the exact text Redfin uses`, `Because SQL runs faster than Python`, `pytest won’t run without it`, `To delete the bad rows first`], why: `A rule for “builder floor plans” only works if you know Redfin calls them New Construction Plan. Guesses miss real problems and catch fake ones.` },
+  { id: "q2", t: "clean", q: `In SQL, what does LIKE '%Land%' match?`, a: [`Any text containing “Land”`, `Only the exact text %Land%`, `Text that starts with a percent sign`, `Numbers close to “Land”`], why: `% means “anything here.” So '%Land%' matches Vacant Land, Land Lot, and anything else with Land inside it.` },
+  { id: "q3", t: "clean", q: `Which line finds listings that have a bedroom count?`, a: [`WHERE beds IS NOT NULL`, `WHERE beds = NULL`, `WHERE beds IS NONE`, `WHERE beds != blank`], why: `SQL checks for blank with IS NULL and IS NOT NULL. Comparing with = NULL never matches anything.` },
+  { id: "q4", t: "clean", q: `Which of these is bad data, not just data you don’t need?`, a: [`Vacant land listed with 4 bedrooms`, `A vacant land listing`, `A $900,000 house`, `A condo`], why: `Land with bedrooms contradicts itself, so something in it is wrong. A land listing is real data; it’s just not a house.` },
+  { id: "q5", t: "clean", q: `A gradebook should only hold scores from 0 to 100. Which query spots impossible scores fastest?`, a: [`SELECT MIN(score), MAX(score) FROM grades;`, `SELECT * FROM grades;`, `SELECT COUNT(*) FROM grades;`, `DELETE FROM grades;`], why: `Impossible values hide at the extremes. If MAX(score) is 400, someone typed an extra zero.` },
+  { id: "q6", t: "clean", q: `Why standardize addresses into one form?`, a: [`So the same place always matches, however it’s spelled`, `To make them shorter on screen`, `Because SQLite needs capital letters`, `To fix typos inside the CSV file`], why: `To code, "127 Carl Avenue" and "127 carl ave." are different text. The standardized key makes them equal. The original address is never changed.` },
+  { id: "q7", t: "clean", q: `What does this print?`, code: `words = "12 Elm Street".split()\nprint(words)`, a: [`['12', 'Elm', 'Street']`, `12 Elm Street`, `['12 Elm Street']`, `3`], why: `.split() breaks text into a list of words wherever there are spaces.` },
+  { id: "q8", t: "clean", q: `What does this print?`, code: `print("-".join(["a", "b", "c"]))`, a: [`a-b-c`, `abc`, `-a-b-c-`, `['a', 'b', 'c']`], why: `join glues a list of strings together, with the text before .join between each pair.` },
+  { id: "q9", t: "clean", q: `What does this print?`, code: `name = "ana"\nname.upper()\nprint(name)`, a: [`ana`, `ANA`, `Ana`, `An error`], why: `String methods hand back a new string; they never change the original. To keep the result, store it: name = name.upper().` },
+  { id: "q10", t: "clean", q: `ABBREVIATIONS has no key "OAK". What does this return?`, code: `ABBREVIATIONS.get("OAK", "OAK")`, a: [`"OAK"`, `A KeyError`, `None`, `An empty string`], why: `.get(key, default) returns the default when the key is missing. That’s why it’s the safe way to look things up.` },
+  { id: "q11", t: "clean", q: `A sign-up form must treat Ana@Mail.com and ana@mail.com as the same email. What should it do before comparing?`, a: [`Lowercase both, with .lower()`, `Split both into words`, `Store them as numbers`, `Compare their lengths`], why: `Same idea as addresses: turn every spelling into one standard form, then compare.` },
+  { id: "q12", t: "clean", q: `Why is MIN_PRICE a setting at the top of clean.py, instead of 10000 typed inside the rule?`, a: [`So changing the cutoff is a one-line edit`, `Python requires settings at the top`, `It makes the rule run faster`, `So nobody can change it`], why: `Named settings are easy to find and change, and the name explains what the number means.` },
+  { id: "q13", t: "clean", q: `What does this print?`, code: `age = 25\nhas_ticket = False\nprint(age >= 18 and has_ticket)`, a: [`False`, `True`, `25`, `An error`], why: `and needs every part to be True. age >= 18 is True, but has_ticket is False, so the whole thing is False.` },
+  { id: "q14", t: "clean", q: `What does this print?`, code: `day = "Sat"\nprint(day == "Sat" or day == "Sun")`, a: [`True`, `False`, `Sat`, `An error`], why: `or needs at least one part to be True. day == "Sat" is True, so the whole thing is True.` },
+  { id: "q15", t: "clean", q: `What does this print?`, code: `beds = 3\nprint(f"{beds} bedrooms")`, a: [`3 bedrooms`, `{beds} bedrooms`, `beds bedrooms`, `f3 bedrooms`], why: `The f before the quotes makes it an f-string. Each {name} is replaced with that variable’s value.` },
+  { id: "q16", t: "clean", q: `A listing has no square footage. What should the size rule do?`, a: [`Return None, because unknown isn’t proof of a problem`, `Flag it as impossible`, `Treat the size as 0`, `Delete the listing`], why: `Flagging every blank would throw away good data. And doing math with None would crash with a TypeError, so check for None first.` },
+  { id: "q17", t: "clean", q: `A password must be at least 8 characters AND must not be "password". Which check fits?`, a: [`if len(pw) >= 8 and pw != "password":`, `if len(pw) >= 8 or pw != "password":`, `if len(pw) = 8:`, `if pw in 8:`], why: `Both conditions must hold, so it’s and. With or, "password" would pass just for being 8 characters long.` },
+  { id: "q18", t: "clean", q: `In a test, what does assert do?`, a: [`Fails the test if what follows isn’t True`, `Prints a value`, `Saves the result to a file`, `Skips the test`], why: `assert means “this must be True.” If it isn’t, pytest marks the test FAILED and shows both values.` },
+  { id: "q19", t: "clean", q: `pytest says it found 0 tests in your file. What’s the most likely cause?`, a: [`The file or function names don’t start with test_`, `All the tests passed`, `assert was spelled in capitals`, `The tests folder is empty on GitHub`], why: `pytest only collects files named test_*.py and functions named test_.... Anything else is ignored silently.` },
+  { id: "q20", t: "clean", q: `In this failure, what did your function actually return?`, code: `AssertionError: assert '123 MAIN ST' == '123 Main St'`, a: [`'123 MAIN ST'`, `'123 Main St'`, `Nothing`, `An error`], why: `The left side is what your code returned; the right side is what the test expected. Then decide which one is wrong.` },
+  { id: "q21", t: "clean", q: `Why does each test copy GOOD_HOME and change just one field?`, a: [`So a failure points straight at the cause`, `To save memory`, `pytest requires a variable named GOOD_HOME`, `So GOOD_HOME gets updated for the next test`], why: `If only the price changed and the test fails, the price rule is the problem. replace() makes a copy, so GOOD_HOME itself never changes.` },
+  { id: "q22", t: "clean", q: `Why write a test that checks a rule does NOT flag something?`, a: [`A rule that flags good data is a bug too`, `It makes pytest run faster`, `Every project needs an even number of tests`, `It doesn’t really matter`], why: `Tests like test_unknown_size_is_not_flagged catch rules that are too eager.` },
+  { id: "q23", t: "clean", q: `You wrote double(n), which returns n * 2. Which line is a real test?`, a: [`assert double(4) == 8`, `print(double(4))`, `double(4)`, `assert double`], why: `A test needs assert plus the expected value. print only shows the result; nothing checks it.` },
+  { id: "q24", t: "clean", q: `Why flag bad rows instead of deleting them?`, a: [`You keep the evidence, and can re-check if a rule changes`, `SQLite can’t delete rows`, `Flagged rows load faster`, `To make the database bigger`], why: `A problems column says what was wrong. Later projects pick trustworthy rows with WHERE problems IS NULL.` },
+  { id: "q25", t: "clean", q: `You wrote check_garage() but forgot to add it to RULES. What happens?`, a: [`It never runs during imports, and nothing warns you`, `Python raises an error`, `It runs anyway`, `pytest refuses to start`], why: `find_problems only runs what’s in the list. Its own test still passes, because the test calls it directly.` },
+  { id: "q26", t: "clean", q: `In RULES = [check_price, check_area], why are there no parentheses after the names?`, a: [`The list holds the functions themselves, to run later`, `Parentheses are optional in lists`, `It runs them right away`, `It’s a typo`], why: `check_price is the function; check_price(prop) runs it. Functions are values, so a list can hold them.` },
+  { id: "q27", t: "clean", q: `What does this print?`, code: `problems = []\nif problems:\n    print("flagged")\nelse:\n    print("clean")`, a: [`clean`, `flagged`, `[]`, `Nothing`], why: `An empty list counts as False. A list with anything in it counts as True.` },
+  { id: "q28", t: "clean", q: `You added a column to CREATE TABLE IF NOT EXISTS, but your existing table didn’t change. Why?`, a: [`IF NOT EXISTS skips a table that’s already there`, `You forgot a semicolon`, `SQLite can’t store text`, `The CSV file is wrong`], why: `The fix is to rebuild: delete the database file, create the table, and re-import. That’s safe because the database is built from your CSVs.` },
+  { id: "q29", t: "clean", q: `A school app finds student records with impossible birthdays. What’s the best move?`, a: [`Mark them with a reason so someone can review them`, `Delete them right away`, `Change the birthdays to today`, `Ignore them`], why: `Flag, don’t delete. It’s how email apps handle spam and banks handle suspicious charges.` },
 ];
 
 const CARDS = [
@@ -428,6 +459,18 @@ const CARDS = [
   { id: "c32", t: "core", f: `DRY`, b: `Don’t repeat yourself: write a job once as a function and reuse it.` },
   { id: "c34", t: "pipe", f: `requirements.txt`, b: `Your project’s shopping list of packages. pip install -r requirements.txt installs them all.` },
   { id: "c36", t: "pipe", f: `Never hand-edit raw data`, b: `Fix quirks once in code so every future download is handled the same way.` },
+  { id: "c48", t: "clean", f: `Look before you build`, b: `Query the data first, then write rules that fit what’s really there.` },
+  { id: "c49", t: "clean", f: `LIKE '%text%'`, b: `SQL match for any text containing “text.” % means anything.` },
+  { id: "c50", t: "clean", f: `IS NULL / IS NOT NULL`, b: `SQL’s blank check. = NULL never matches.` },
+  { id: "c51", t: "clean", f: `String methods`, b: `.upper(), .strip(), .replace(), .split(), .join(). They return a new string; store the result.` },
+  { id: "c52", t: "clean", f: `dict.get(key, default)`, b: `Safe lookup: returns the default instead of raising a KeyError.` },
+  { id: "c53", t: "clean", f: `and / or / not in`, b: `and: all must be True. or: at least one. not in: missing from the list.` },
+  { id: "c54", t: "clean", f: `f-string`, b: `f"{name} has {beds} beds" fills in values. {price:,} adds commas.` },
+  { id: "c55", t: "clean", f: `assert`, b: `“This must be True.” If it isn’t, the test fails and shows both values.` },
+  { id: "c56", t: "clean", f: `pytest names`, b: `Files named test_*.py, functions named test_.... Run with python3 -m pytest.` },
+  { id: "c57", t: "clean", f: `Flag, don’t delete`, b: `Save bad rows with a reason. Pick good ones later with WHERE problems IS NULL.` },
+  { id: "c58", t: "clean", f: `A list of functions`, b: `RULES = [check_price, ...] holds functions to run later. No parentheses.` },
+  { id: "c59", t: "clean", f: `Empty list is False`, b: `if problems: is True only when the list has something in it.` },
 ];
 
 const UNITS = [
@@ -436,6 +479,7 @@ const UNITS = [
   { id: "u2", name: "Describing a thing", project: "Project 1" },
   { id: "u3", name: "The filing cabinet", project: "Project 1" },
   { id: "u4", name: "Real data, real mess", project: "Project 2" },
+  { id: "u5", name: "Cleaning the data", project: "Project 3" },
 ];
 const T = (title, body, code, tip) => ({ kind: "teach", title, body: [].concat(body), code, tip });
 const S = (title, body, code, tip) => Object.assign(T(title, body, code, tip), { tag: "spot" });
@@ -693,6 +737,68 @@ const LESSONS = [
     C("e15"),
     A("Use it anywhere", "Placeholders matter in any app with a database: a login form, a search box, a sign-up page. And “don’t delete the input until the work is saved” applies to any file-processing job."),
   ], learned: ["Placeholders keep SQL safe from apostrophes and injection", "INSERT OR IGNORE plus UNIQUE prevents duplicates", "Move a file only after its work is saved"] },
+
+  // ---------- Project 3: Cleaning the data ----------
+  { id: "g1", u: "u5", title: "Look before you build", steps: [
+    T("Ask the data first", ["Before writing a cleaning rule, ask the database what’s actually in it. Rules based on guesses miss real problems and catch fake ones.", "This query counts every combination of property type and sale type. It’s how you learn the exact words the data uses."], `SELECT property_type, sale_type, COUNT(*)\nFROM properties\nGROUP BY property_type, sale_type;\n\nSingle Family Residential  MLS Listing            65\nSingle Family Residential  New Construction Plan   5\nUnknown                    For-Sale-by-Owner       6\nVacant Land                MLS Listing            16`),
+    C("q1"),
+    T("Four new SQL pieces", "These help you hunt for problems.", `WHERE beds IS NOT NULL          has a value (SQL's "is not None")\nWHERE property_type LIKE '%Land%'   text contains "Land"\nSELECT MIN(price), MAX(price)   smallest and largest\nGROUP BY city, zip_code         one pile per combination`, `In SQL, blank is <b>NULL</b>, and you check for it with <b>IS NULL</b> or <b>IS NOT NULL</b>. Comparing with = NULL never matches.`),
+    C("q2"), C("q3"),
+    T("Bad data vs. data you don’t need", ["Bad data is wrong, or isn’t a real listing: land with bedrooms, a builder’s floor plan, a $1 price. That gets flagged.", "Vacant land on its own is a real listing. It just isn’t a house. That stays unflagged; choosing what to compare is a later project’s job."]),
+    C("q4"),
+    A("Use it anywhere", ["Look first, in any dataset. A teacher checks MIN and MAX scores to catch a 400 that should be 40. A store groups by category and discovers “Shoes” and “shoes” as two piles."]),
+    C("q5"),
+  ], learned: ["Query the data before writing rules", "IS NULL / IS NOT NULL, LIKE, MIN/MAX, GROUP BY two columns", "Flag bad data; keep data you just don’t need yet"] },
+
+  { id: "g2", u: "u5", title: "Cleaning text", steps: [
+    T("Same place, different text", ["To code, these are completely different addresses. Standardizing turns every spelling into one form, called a key, so they match.", "The key is for matching only. The original address stays exactly as it came in."], `normalize_address("127 Carl Avenue")   # 127 CARL AVE\nnormalize_address("127 carl ave.")     # 127 CARL AVE`),
+    C("q6"),
+    T("String methods", ["Text has built-in methods. Each one hands back a new string and leaves the original alone, so store the result: text = text.upper()."], `"Main St".upper()          # "MAIN ST"\n"  hi  ".strip()           # "hi"\n"a#b".replace("#", "-")    # "a-b"\n"45 Oak Ave".split()       # ["45", "Oak", "Ave"]\n" ".join(["45", "OAK"])    # "45 OAK"`),
+    C("q7"), C("q8"), C("q9"),
+    T("Patterns and safe lookups", ["re.sub finds a pattern and replaces every match. [.,] means “a period or a comma.”", "dictionary.get(key, default) returns the value if the key exists, or the default if it doesn’t. It never raises a KeyError."], `re.sub(r"[.,]", " ", "N. Main St.")     # "N  Main St "\nABBREVIATIONS.get("AVENUE", "AVENUE")   # "AVE"\nABBREVIATIONS.get("OAK", "OAK")         # "OAK"`),
+    C("q10"),
+    S("How to spot text cleaning", ["A dot after text, then a name and parentheses: a string method, like .upper() or .split().", "re. means a regular expression: pattern matching.", ".get( on a dictionary is a safe lookup."], `text = text.upper()\nwords = text.split()\nshort = ABBREVIATIONS.get(word, word)`),
+    A("Use it anywhere", ["Standardizing text is everywhere. Sign-up forms lowercase emails so Ana@Mail.com and ana@mail.com count as one account. Apps strip dashes from phone numbers before comparing them."], `email = email.strip().lower()\nphone = phone.replace("-", "")`),
+    C("q11"),
+  ], learned: ["Standardize text into a key so the same thing always matches", "String methods return a new string; store the result", "re.sub replaces patterns; .get() looks up safely"] },
+
+  { id: "g3", u: "u5", title: "Rules with and / or", steps: [
+    T("One rule, one function", ["Every rule has the same shape: take one Property, return a reason if something’s wrong, or None if it’s fine.", "Cutoffs live in ALL-CAPS settings at the top of the file, so changing one is a one-line edit."], `MIN_PRICE = 10_000\n\ndef check_price(prop):\n    if prop.price < MIN_PRICE:\n        return f"price \${prop.price:,} is below \${MIN_PRICE:,}"\n    return None`),
+    C("q12"),
+    T("Combining conditions", ["and: every part must be True.", "or: at least one part must be True.", "not in: True when the value is missing from a list."], `prop.property_type == "Vacant Land" and prop.beds > 0\nprop.year_built > latest or prop.year_built < 1800\nprop.zip_code not in TARGET_ZIPS`),
+    C("q13"), C("q14"),
+    T("f-strings", "An f before the quotes lets you fill values into text with braces. Adding :, inside the braces puts commas in big numbers.", `beds = 3\nprice = 1250000\nprint(f"{beds} beds, \${price:,}")   # 3 beds, $1,250,000`),
+    C("q15"),
+    T("Unknown isn’t wrong", ["A blank isn’t proof of a problem. If size or bedrooms is unknown, the size rule returns None and moves on.", "Checking for None first also prevents a crash: math with None is a TypeError."], `def check_size_for_bedrooms(prop):\n    if prop.sqft is None or prop.beds is None:\n        return None\n    if prop.sqft < prop.beds * MIN_SQFT_PER_BED:\n        return f"{prop.sqft} sq ft is too small"\n    return None`),
+    C("q16"),
+    A("Use it anywhere", ["Validation rules are in every app. A sign-up form checks that age is at least 13 and the password is long enough. A bank flags a charge if it’s over $1,000 or from another country."]),
+    C("q17"),
+  ], learned: ["Each rule returns a reason or None", "and = all True; or = any True; not in = missing", "Unknown isn’t wrong: check for None first"] },
+
+  { id: "g4", u: "u5", title: "Testing with pytest", steps: [
+    T("Code that checks your code", ["A test feeds your code a known input and checks the output. assert means “this must be True.”", "pytest finds files named test_*.py and functions named test_..., runs them all, and reports what passed."], `from app.clean import normalize_address\n\ndef test_uppercases_and_trims():\n    assert normalize_address("  123 Main St  ") == "123 MAIN ST"\n\n% python3 -m pytest\n1 passed`),
+    C("q18"), C("q19"),
+    T("Reading a failure", ["A failing test shows FAILED and the line that broke. In the AssertionError line, the left side is what your code returned and the right side is what the test expected.", "Then decide which one is wrong: the code or the test."], `>   assert normalize_address("  123 Main St  ") == "123 Main St"\nE   AssertionError: assert '123 MAIN ST' == '123 Main St'\nFAILED tests/test_clean.py::test_uppercases_and_trims\n1 failed`),
+    C("q20"),
+    T("Copy a good example, break one thing", ["Build one believable house. Each test copies it with replace() and changes a single field, so a failure points straight at the cause.", "Also test that rules stay quiet on good data. A rule that flags good data is a bug too."], `GOOD_HOME = Property(address="123 Main St", price=250000, ...)\n\ndef test_price_too_low_is_flagged():\n    assert check_price(replace(GOOD_HOME, price=1)) is not None\n\ndef test_unknown_size_is_not_flagged():\n    assert check_size_for_bedrooms(replace(GOOD_HOME, sqft=None)) is None`),
+    C("q21"), C("q22"),
+    T("Break it on purpose", "Change a setting and watch what fails. With MIN_PRICE = 300_000, the $250,000 GOOD_HOME suddenly counts as too cheap, and test_good_home_has_no_problems fails. Seeing a test fail proves it really checks something."),
+    A("Use it anywhere", "Every serious project has tests, and every language has a tool like pytest. Run them before each commit. Test what matters, like flagged or not, rather than details that may change, like exact wording."),
+    C("q23"),
+  ], learned: ["test_ files and functions; assert means must be True", "Left side = what you got; right side = what you expected", "Copy a known-good example and break one thing"] },
+
+  { id: "g5", u: "u5", title: "Flag, don’t delete", steps: [
+    T("Keep the evidence", ["Bad listings are saved with a reason in a problems column instead of being deleted. You can see what was wrong, and re-check everything if a rule changes.", "Later projects pick trustworthy listings with one filter."], `SELECT COUNT(*) FROM properties WHERE problems IS NULL;\n89`),
+    C("q24"),
+    T("A list of functions", ["Functions are values, so a list can hold them. Without parentheses, check_price is the function itself; check_price(prop) would run it.", "find_problems loops over the list, runs each rule, and collects the reasons. To add a rule, write it and add one line to RULES."], `RULES = [check_price, check_area]\n\ndef find_problems(prop):\n    problems = []\n    for rule in RULES:\n        reason = rule(prop)\n        if reason is not None:\n            problems.append(reason)\n    return problems`),
+    C("q25"), C("q26"),
+    T("Empty lists and join", ["An empty list counts as False; a list with anything in it counts as True. So if problems: means “if anything was found.”", "\"; \".join(problems) turns the list into one piece of text, because a database column holds text, not a list."], `problems = ["property type unknown", "ZIP 39110 is outside your market"]\nif problems:\n    prop.problems = "; ".join(problems)`),
+    C("q27"),
+    T("New columns mean a rebuild", ["Adding a field means changing models.py and the table in db.py together. But CREATE TABLE IF NOT EXISTS skips a table that’s already there, so the old table never gains the new columns.", "The fix is to rebuild. That’s safe, because the database is built from your CSV files."], `% rm data/properties.db\n% python3 -m app.db\n% mv data/raw/*.csv data/inbox/\n% python3 -m app.import_redfin`),
+    C("q28"),
+    A("Use it anywhere", "Flag, don’t delete is everywhere: email apps move spam to a folder instead of erasing it, and banks hold suspicious charges for review. A report with counts and reasons is how any data job shows its work."),
+    C("q29"),
+  ], learned: ["Flag bad rows with a reason; never delete the evidence", "A list of functions lets one loop run every rule", "New columns need a rebuild because of IF NOT EXISTS"] },
 ];
 
 const BUGS = {
@@ -720,6 +826,11 @@ const BUGS = {
   l14: { name: "NANITE", type: "DATA", desc: "A tiny blank that hides in DataFrames as NaN.", weak: "df.isna().sum()" },
   l15: { name: "FLOATZIP", type: "DATA", desc: "Turns ZIP codes into decimals like 39157.0.", weak: "dtype={...: str}" },
   l16: { name: "REPEATO", type: "DATA", desc: "Copies the same three lines of code everywhere.", weak: "DRY helper functions" },
+  g1: { name: "HUNCHBUG", type: "SQL", desc: "Writes cleaning rules from guesses instead of the data.", weak: "Look first" },
+  g2: { name: "DOPPEL", type: "DATA", desc: "Makes one address look like two different places.", weak: "A standard form" },
+  g3: { name: "OVERFLAG", type: "PYTHON", desc: "Flags good data because a rule is too eager.", weak: "Unknown isn’t wrong" },
+  g4: { name: "SILENTO", type: "TERMINAL", desc: "Breaks code quietly where no test is watching.", weak: "assert" },
+  g5: { name: "SHREDDER", type: "SQL", desc: "Deletes bad rows, and the evidence with them.", weak: "Flag with a reason" },
   l17: { name: "INJECTO", type: "SQL", desc: "Slips commands into SQL that was built by hand.", weak: "Placeholders like :address" },
 };
 const TYPE_COLORS = {
@@ -730,6 +841,7 @@ const BADGES = {
   u0: { name: "Foundation Badge", color: "#F07A8F" },
   u1: { name: "Terminal Badge", color: "#9A78E0" }, u2: { name: "Blueprint Badge", color: "#4E9AE6" },
   u3: { name: "Vault Badge", color: "#3DB377" }, u4: { name: "Pipeline Badge", color: "#E8BE3E" },
+  u5: { name: "Filter Badge", color: "#3FB8C9" },
 };
 
 /* ---------- Art (smooth SVG) ---------- */
